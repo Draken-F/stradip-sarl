@@ -1,0 +1,64 @@
+---
+// src/components/ProductList.astro
+import ProductCard from './ProductCard.astro';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+// Récupération des filtres depuis l'URL
+const { searchParams } = Astro.url;
+const params = new URLSearchParams();
+
+const style = searchParams.get('style');
+if (style && style !== 'Tous les styles' && style !== 'All Styles') params.append('style', style);
+
+const app = searchParams.get('app');
+if (app && app !== 'Toutes les poses' && app !== 'All Applications') params.append('type_pose', app);
+
+const space = searchParams.get('space');
+if (space && space !== 'Toutes les pièces' && space !== 'All Spaces') params.append('piece', space);
+
+const mat = searchParams.get('mat');
+if (mat && mat !== 'Toutes les matières' && mat !== 'All Materials') params.append('category_id', mat);
+
+const color = searchParams.get('color');
+if (color) params.append('couleur', color);
+
+// Récupération des données depuis l'API FastAPI avec filtres
+const apiUrl = `${import.meta.env.PUBLIC_API_URL}/api/products/?${params.toString()}`;
+console.log("FETCHING API WITH URL:", apiUrl);
+
+const response = await fetch(apiUrl);
+const data = await response.json();
+const products = data.items || [];
+
+// Transformation pour correspondre au composant ProductCard
+const formattedProducts = products.map((p: any) => ({
+  id: p.id,
+  nom: p.nom,
+  image: p.image_url.startsWith('http') ? p.image_url : `${import.meta.env.PUBLIC_API_URL}${p.image_url}`,
+  style: p.style,
+  category: p.type_pose,
+  matiere: p.category ? p.category.nom_matiere : 'Standard'
+}));
+---
+
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-10 gap-y-16">
+    {formattedProducts.map((p: any) => (
+        <ProductCard 
+            id={p.id}
+            nom={p.nom}
+            image={p.image}
+            style={p.style}
+            category={p.category}
+            matiere={p.matiere}
+        />
+    ))}
+</div>
+
+{formattedProducts.length === 0 && (
+    <div class="text-center py-20">
+        <p class="text-slate-400 italic">{lang === 'fr' ? 'Aucun produit trouvé dans cette collection.' : 'No products found in this collection.'}</p>
+    </div>
+)}

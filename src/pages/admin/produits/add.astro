@@ -1,0 +1,274 @@
+---
+// src/pages/admin/produits/add.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Récupération des catégories depuis l'API FastAPI
+let categories = [];
+try {
+    const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/categories`);
+    if (res.ok) {
+        const data = await res.json();
+        categories = data.items || data;
+    }
+} catch (e) {
+    console.error("Erreur de chargement des catégories", e);
+}
+---
+
+<AdminLayout title="Ajouter un Produit" currentPage="/admin/produits">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-12">
+            <a href="/admin/produits" class="text-stradip-cyan text-[0.65rem] font-black uppercase tracking-[3px] hover:text-stradip-blue transition-colors">← Retour au catalogue</a>
+            <h2 class="text-3xl font-bold text-slate-900 uppercase tracking-tighter mt-4">Nouveau Carreau</h2>
+            <p class="text-slate-500 text-sm mt-1">Ajoutez une nouvelle référence au catalogue STRADIP.</p>
+        </header>
+
+        <form id="productForm" class="bg-white p-8 md:p-12 shadow-xl border border-slate-100 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Messages d'erreur ou succès -->
+            <div id="statusMessage" class="hidden md:col-span-2 p-4 rounded-xl text-sm font-bold"></div>
+
+            <div class="md:col-span-2">
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Nom du modèle</label>
+                <input type="text" name="nom" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-stradip-cyan outline-none font-bold text-slate-800 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Référence</label>
+                <input type="text" name="reference" placeholder="Ex: STR-2026-01" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-stradip-cyan outline-none transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Dimensions (cm)</label>
+                <input type="text" name="dimension" placeholder="Ex: 60x120" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-stradip-cyan outline-none transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Type de pose</label>
+                <select name="type_pose" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-stradip-cyan outline-none transition-colors">
+                    <option value="Sol">Sol</option>
+                    <option value="Mur">Mur</option>
+                    <option value="Sol & Mur">Sol & Mur</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Matière</label>
+                <select name="category_id" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-stradip-cyan outline-none transition-colors">
+                    <option value="">Sélectionnez une matière</option>
+                    {categories.map((cat: any) => (
+                        <option value={cat.id}>{cat.nom_matiere}</option>
+                    ))}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-4">Couleur dominante</label>
+                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                    <div class="flex items-center gap-6 mb-6">
+                        <!-- Preview Circle -->
+                        <div id="colorCircle" class="w-16 h-16 rounded-2xl shadow-inner border-4 border-white transition-all duration-300" style="background-color: #FFFFFF;"></div>
+                        
+                        <div class="flex-1">
+                            <input type="text" id="colorText" name="couleur" value="#FFFFFF" class="bg-transparent border-none outline-none font-mono text-xl font-black text-slate-800 uppercase w-full tracking-tighter" placeholder="#HEX">
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">Cliquez pour éditer le code</p>
+                        </div>
+
+                        <!-- Hidden native picker triggered by button -->
+                        <button type="button" id="colorBtn" class="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center hover:shadow-md transition-all text-xl">🎨</button>
+                        <input type="color" id="colorPicker" value="#FFFFFF" class="sr-only">
+                    </div>
+
+                    <!-- Presets -->
+                    <div class="flex flex-wrap gap-3">
+                        {['#FFFFFF', '#F5F5DC', '#D2B48C', '#808080', '#2F4F4F', '#000000'].map(c => (
+                            <button type="button" class="color-preset w-8 h-8 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform" style={`background-color: ${c};`} data-color={c}></button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Style</label>
+                <select name="style" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-stradip-cyan outline-none transition-colors">
+                    <option value="Standard">Standard</option>
+                    <option value="Décoratif / Motif">Décoratif / Motif</option>
+                    <option value="Prestige">Prestige</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-4">Pièces recommandées</label>
+                <div class="flex flex-wrap gap-3 p-6 bg-slate-50 border border-slate-200 rounded-[2rem]">
+                    {['Toutes les pièces', 'Living room', 'Bedroom', 'Bathroom', 'Dining room', 'Kitchen', 'Outdoor'].map(room => (
+                        <label class="cursor-pointer group">
+                            <input type="checkbox" name="piece_chips" value={room} class="sr-only peer">
+                            <span class="px-6 py-3 rounded-xl bg-white border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 peer-checked:bg-stradip-cyan peer-checked:text-white peer-checked:border-stradip-cyan peer-checked:shadow-lg peer-checked:shadow-stradip-cyan/20 transition-all group-hover:border-stradip-cyan/30 block">
+                                {room}
+                            </span>
+                        </label>
+                    ))}
+                </div>
+                <input type="hidden" name="piece" id="pieceFinalValue">
+            </div>
+            
+            <div class="md:col-span-2">
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Description</label>
+                <textarea name="description" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-stradip-cyan outline-none transition-colors"></textarea>
+            </div>
+
+            <div class="md:col-span-2 bg-slate-50/50 p-8 border-2 border-dashed border-slate-200 rounded-2xl group hover:border-stradip-cyan transition-colors">
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-4 text-center">Photo du produit</label>
+                
+                <!-- PREVIEW CONTAINER -->
+                <div id="imagePreviewContainer" class="hidden mb-6 relative mx-auto w-48 h-48 rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+                    <img id="imagePreview" src="#" class="w-full h-full object-cover" />
+                    <button type="button" id="removeImageBtn" class="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-md">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <div class="flex justify-center" id="uploadInputArea">
+                    <input type="file" name="image" id="imageInput" accept="image/*" required class="text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[0.6rem] file:font-black file:uppercase file:bg-stradip-blue file:text-white hover:file:bg-stradip-cyan file:transition-colors cursor-pointer">
+                </div>
+            </div>
+
+            <div class="md:col-span-2 pt-6">
+                <button type="submit" id="submitBtn" class="w-full bg-stradip-blue text-white py-5 rounded-xl text-[0.7rem] font-black uppercase tracking-[3px] hover:bg-stradip-cyan transition-all duration-500 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed">
+                    Enregistrer le produit
+                </button>
+            </div>
+
+        </form>
+    </div>
+</AdminLayout>
+
+<script>
+    const form = document.getElementById('productForm') as HTMLFormElement;
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+    const statusMessage = document.getElementById('statusMessage') as HTMLDivElement;
+    const imageInput = document.getElementById('imageInput') as HTMLInputElement;
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview') as HTMLImageElement;
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const uploadInputArea = document.getElementById('uploadInputArea');
+
+    const colorPicker = document.getElementById('colorPicker') as HTMLInputElement;
+    const colorText = document.getElementById('colorText') as HTMLInputElement;
+    const colorCircle = document.getElementById('colorCircle');
+    const colorBtn = document.getElementById('colorBtn');
+    const presets = document.querySelectorAll('.color-preset');
+
+    // Mise à jour globale de la couleur
+    const updateColor = (hex: string) => {
+        const cleanHex = hex.startsWith('#') ? hex : '#' + hex;
+        if (colorPicker) colorPicker.value = cleanHex;
+        if (colorText) colorText.value = cleanHex.toUpperCase();
+        if (colorCircle) colorCircle.style.backgroundColor = cleanHex;
+    };
+
+    colorBtn?.addEventListener('click', () => colorPicker?.click());
+
+    colorPicker?.addEventListener('input', (e) => {
+        updateColor((e.target as HTMLInputElement).value);
+    });
+
+    colorText?.addEventListener('input', (e) => {
+        const val = (e.target as HTMLInputElement).value;
+        if (/^#[0-9A-F]{6}$/i.test(val)) {
+            updateColor(val);
+        }
+    });
+
+    presets.forEach(p => {
+        p.addEventListener('click', () => {
+            const c = p.getAttribute('data-color');
+            if (c) updateColor(c);
+        });
+    });
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 0. Récupération des pièces sélectionnées
+        const selectedPieces = Array.from(document.querySelectorAll('input[name="piece_chips"]:checked'))
+            .map(el => (el as HTMLInputElement).value);
+        
+        const pieceValue = selectedPieces.length > 0 ? selectedPieces.join(', ') : 'Toutes les pièces';
+        
+        // Reset status
+        statusMessage.classList.add('hidden');
+        statusMessage.className = 'md:col-span-2 p-4 rounded-xl text-sm font-bold';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enregistrement en cours...';
+
+        try {
+            // 1. Upload de l'image
+            if (!imageInput.files || imageInput.files.length === 0) {
+                throw new Error("Veuillez sélectionner une image.");
+            }
+
+            const imageFile = imageInput.files[0];
+            const formDataImage = new FormData();
+            formDataImage.append('file', imageFile);
+
+            const uploadRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/upload/`, {
+                method: 'POST',
+                body: formDataImage
+            });
+
+            if (!uploadRes.ok) throw new Error("Erreur lors de l'upload de l'image.");
+            
+            const uploadData = await uploadRes.json();
+            const imageUrl = uploadData.url;
+
+            // 2. Préparation des données du produit
+            const formData = new FormData(form);
+            
+            // Construction de l'objet JSON basé sur le modèle backend
+            const productData = {
+                nom: formData.get('nom'),
+                reference: formData.get('reference'),
+                dimension: formData.get('dimension'),
+                type_pose: formData.get('type_pose'),
+                piece: pieceValue,
+                couleur: colorPicker.value.toUpperCase(),
+                style: formData.get('style'),
+                description: formData.get('description') || null,
+                category_id: formData.get('category_id') ? parseInt(formData.get('category_id') as string) : null,
+                image_url: imageUrl
+            };
+
+            // 3. Envoi au backend
+            const productRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(productData)
+            });
+
+            if (!productRes.ok) {
+                const errorData = await productRes.json();
+                throw new Error(errorData.detail || "Erreur lors de la création du produit.");
+            }
+
+            // Succès
+            statusMessage.textContent = 'Produit enregistré avec succès ! Redirection...';
+            statusMessage.classList.add('bg-green-50', 'text-green-600');
+            statusMessage.classList.remove('hidden');
+            
+            setTimeout(() => {
+                window.location.href = '/admin/produits';
+            }, 1500);
+
+        } catch (error: any) {
+            console.error("Erreur:", error);
+            statusMessage.textContent = error.message;
+            statusMessage.classList.add('bg-red-50', 'text-red-600');
+            statusMessage.classList.remove('hidden');
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Enregistrer le produit';
+        }
+    });
+</script>

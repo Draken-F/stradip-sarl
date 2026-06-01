@@ -1,0 +1,178 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+import Footer from '../../../components/Footer.astro';
+import { useTranslations, useTranslatedPath } from '../../../i18n/utils';
+
+export async function getStaticPaths() {
+  const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/projects/`);
+  const data = await response.json();
+  const realisations = data.items || data;
+  const locales = ['fr', 'en'];
+
+  if (!Array.isArray(realisations)) return [];
+
+  return locales.flatMap(lang => 
+    realisations.map((p: any) => ({
+      params: { lang, id: p.id.toString() },
+      props: { projetId: p.id },
+    }))
+  );
+}
+
+const { lang } = Astro.params;
+const { projetId } = Astro.props;
+const t = useTranslations(lang as any);
+const translatePath = useTranslatedPath(lang as any);
+
+// Récupération des détails du projet
+const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/projects/${projetId}`);
+const rawProjet = await response.json();
+
+const projet = {
+  id: rawProjet.id,
+  nom: rawProjet.nom,
+  image_globale: rawProjet.image_globale.startsWith('http') ? rawProjet.image_globale : `${import.meta.env.PUBLIC_API_URL}${rawProjet.image_globale}`,
+  sections: (rawProjet.sections || []).map((s: any) => ({
+    id: s.id,
+    titre_piece: s.titre_piece,
+    description: s.description,
+    image_ambiance: s.image_ambiance.startsWith('http') ? s.image_ambiance : `${import.meta.env.PUBLIC_API_URL}${s.image_ambiance}`,
+    gallery: [
+      s.image_ambiance.startsWith('http') ? s.image_ambiance : `${import.meta.env.PUBLIC_API_URL}${s.image_ambiance}`,
+      ...(s.photos || []).map((ph: any) => ph.image_url.startsWith('http') ? ph.image_url : `${import.meta.env.PUBLIC_API_URL}${ph.image_url}`)
+    ],
+    produits: (s.products || []).map((pr: any) => ({
+      id: pr.id,
+      nom: pr.nom,
+      image: pr.image_url.startsWith('http') ? pr.image_url : `${import.meta.env.PUBLIC_API_URL}${pr.image_url}`
+    }))
+  }))
+};
+---
+
+<Layout title={`${projet.nom} | STRADIP SARL`}>
+  <Navbar />
+
+  
+  <main class="bg-white min-h-screen pb-32">
+    <section class="relative h-[85vh] flex items-end overflow-hidden">
+      <div class="mb-22"></div>
+      <img src={projet.image_globale} class="absolute inset-0 w-full h-full object-cover scale-105" alt={projet.nom} />
+      <!-- <div class="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/30 to-transparent"></div> -->
+      
+      <div class="container mx-auto px-6 md:px-12 relative z-10 pb-20">
+        <div class="max-w-4xl animate-fade-up">
+            <span class="text-stradip-cyan text-[10px] font-black uppercase tracking-[8px] mb-4 block">{lang === 'fr' ? 'Étude de Cas' : 'Case Study'}</span>
+            <h1 class="font-serif text-6xl md:text-8xl text-white italic leading-none">{projet.nom}</h1>
+        </div>
+      </div>
+    </section>
+
+    
+
+    <div class="space-y-48 mt-40">
+      {projet.sections.map((section: any, index: number) => {
+        const isEven = index % 2 === 0;
+        return (
+          <section class="max-w-7xl mx-auto px-6">
+            <div class={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-20 items-center`}>
+              
+              <div class="lg:w-3/5 space-y-6 w-full">
+                <div class="aspect-[4/3] overflow-hidden bg-slate-50 shadow-2xl rounded-sm">
+                  <img 
+                    id={`mainImage_${section.id}`} 
+                    src={section.gallery[0]} 
+                    class="w-full h-full object-cover transition-opacity duration-500 ease-in-out" 
+                    alt={section.titre_piece}
+                  />
+                </div>
+                
+                {section.gallery.length > 1 && (
+                  <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                    {section.gallery.map((img: string) => (
+                      <button 
+                        class="thumb-btn w-24 h-24 shrink-0 border border-slate-100 hover:border-stradip-cyan transition-all overflow-hidden"
+                        data-section={section.id}
+                        data-src={img}
+                      >
+                        <img src={img} class="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div class="lg:w-2/5 space-y-10">
+                <div class="space-y-4">
+                    <span class="text-stradip-cyan text-[9px] font-black uppercase tracking-[4px]">{lang === 'fr' ? 'Pièce' : 'Room'} {index + 1}</span>
+                    <h2 class="font-serif text-4xl md:text-5xl text-slate-900 italic tracking-tighter">
+                        {section.titre_piece}
+                    </h2>
+                    <div class="w-16 h-1 bg-stradip-cyan mb-8"></div>
+                    <p class="text-slate-500 leading-relaxed font-light text-lg">
+                        {section.description}
+                    </p>
+                </div>
+
+                <div class="pt-10 border-t border-slate-100">
+                  <h4 class="text-[10px] font-black uppercase tracking-[3px] text-stradip-blue mb-6 italic">{lang === 'fr' ? 'Produits sélectionnés :' : 'Selected products:'}</h4>
+                  <div class="grid gap-4">
+                    {section.produits.map((p: any) => (
+                      <a href={translatePath(`/produit/${p.id}`)} class="group flex items-center bg-slate-50 p-4 hover:bg-white transition-all shadow-sm border border-transparent hover:border-stradip-cyan/20">
+                        <div class="w-16 h-16 bg-white overflow-hidden rounded-sm">
+                            <img src={p.image} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <div class="ml-6">
+                          <p class="text-xs font-black text-slate-800 uppercase tracking-widest">{p.nom}</p>
+                          <p class="text-[10px] text-stradip-cyan mt-1 font-bold italic">{lang === 'fr' ? 'Voir la fiche technique' : 'View technical sheet'} →</p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+        )
+      })}
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  const buttons = document.querySelectorAll('.thumb-btn');
+  
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sectionId = btn.getAttribute('data-section');
+      const newSrc = btn.getAttribute('data-src');
+      const mainImg = document.getElementById(`mainImage_${sectionId}`) as HTMLImageElement;
+
+      if (mainImg && newSrc) {
+        mainImg.style.opacity = '0.3';
+        setTimeout(() => {
+          mainImg.src = newSrc;
+          mainImg.style.opacity = '1';
+        }, 300);
+      }
+    });
+  });
+</script>
+
+<style>
+  .font-serif { font-family: 'Playfair Display', serif; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up {
+    animation: fadeUp 1.2s ease-out forwards;
+  }
+</style>

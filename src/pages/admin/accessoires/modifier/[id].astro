@@ -1,0 +1,161 @@
+---
+// src/pages/admin/accessoires/modifier/[id].astro
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+
+let accessory: any = null;
+try {
+    const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/accessories/${id}`);
+    if (response.ok) {
+        accessory = await response.json();
+    }
+} catch (e) {
+    console.error("Erreur de récupération", e);
+}
+
+if (!accessory) return Astro.redirect('/admin/accessoires');
+
+const categories = ["Pose", "Finition", "Outil", "Machine", "Entretien"];
+const displayImageUrl = accessory.image_url.startsWith('http') 
+    ? accessory.image_url 
+    : `${import.meta.env.PUBLIC_API_URL}${accessory.image_url}`;
+---
+
+<AdminLayout title={`Modifier ${accessory.nom}`}>
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-12">
+            <a href="/admin/accessoires" class="text-stradip-cyan text-[10px] font-black uppercase tracking-[3px] hover:gap-4 flex items-center gap-2 transition-all">
+                ← Retour à la liste
+            </a>
+            <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter mt-6 italic">Modifier <span class="text-stradip-blue">l'Accessoire</span></h2>
+        </header>
+
+        <form id="accessoryForm" class="bg-white p-10 md:p-16 rounded-[3rem] shadow-sm border border-slate-100 space-y-12">
+            <div id="statusMessage" class="hidden p-4 rounded-xl text-sm font-bold"></div>
+            
+            <div class="space-y-8">
+                <h3 class="text-xs font-black uppercase tracking-[4px] text-stradip-cyan border-b border-slate-50 pb-4">1. Identité de l'article</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Nom de l'accessoire / outil</label>
+                        <input type="text" name="nom" value={accessory.nom} required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Catégorie technique</label>
+                        <select name="categorie_acc" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold appearance-none">
+                            {categories.map(cat => <option value={cat} selected={cat === accessory.categorie_acc}>{cat}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Disponibilité</label>
+                        <select name="stock" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold appearance-none">
+                            <option value="true" selected={accessory.stock === true}>En Stock</option>
+                            <option value="false" selected={accessory.stock === false}>Sur Commande</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <h3 class="text-xs font-black uppercase tracking-[4px] text-stradip-cyan border-b border-slate-50 pb-4">2. Visuel & Description</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-1">
+                        <div class="aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
+                            <img id="preview" src={displayImageUrl} class="w-full h-full object-cover" />
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 space-y-6">
+                        <div class="p-8 border-4 border-dashed border-slate-50 bg-slate-50/50 rounded-2xl text-center cursor-pointer group" id="drop-zone">
+                            <span class="text-2xl mb-2 block group-hover:scale-110 transition-transform">🔄</span>
+                            <p id="fileName" class="text-[9px] font-black uppercase tracking-[2px] text-slate-400">Changer l'image (Optionnel)</p>
+                            <input type="file" name="image" class="hidden" id="file-input" accept="image/*">
+                        </div>
+                        <textarea name="description" rows="4" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-medium">{accessory.description}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-8">
+                <button type="submit" id="submitBtn" class="w-full bg-[#0a1628] text-white py-6 rounded-2xl text-[11px] font-black uppercase tracking-[4px] hover:bg-stradip-cyan transition-all duration-500 shadow-2xl disabled:opacity-50">
+                    Mettre à jour l'accessoire
+                </button>
+            </div>
+        </form>
+    </div>
+</AdminLayout>
+
+<script define:vars={{ accId: id, currentImageUrl: accessory.image_url }}>
+    const form = document.getElementById('accessoryForm');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileName = document.getElementById('fileName');
+    const preview = document.getElementById('preview');
+    const statusMessage = document.getElementById('statusMessage');
+    const submitBtn = document.getElementById('submitBtn');
+
+    dropZone?.addEventListener('click', () => fileInput.click());
+    
+    fileInput?.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (files && files[0]) {
+            fileName.textContent = "Nouveau : " + files[0].name;
+            const reader = new FileReader();
+            reader.onload = (event) => { if (preview) preview.src = event.target.result; };
+            reader.readAsDataURL(files[0]);
+        }
+    });
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        statusMessage.classList.add('hidden');
+        statusMessage.className = 'p-4 rounded-xl text-sm font-bold';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Mise à jour...';
+
+        try {
+            let imageUrl = currentImageUrl;
+            if (fileInput.files && fileInput.files[0]) {
+                const formDataImage = new FormData();
+                formDataImage.append('file', fileInput.files[0]);
+                const uploadRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/upload/`, { method: 'POST', body: formDataImage });
+                if (!uploadRes.ok) throw new Error("Upload échoué.");
+                const { url: imageUrlNew } = await uploadRes.json();
+                imageUrl = imageUrlNew;
+            }
+
+            const formData = new FormData(form);
+            const data = {
+                nom: formData.get('nom'),
+                categorie_acc: formData.get('categorie_acc'),
+                stock: formData.get('stock') === 'true',
+                description: formData.get('description'),
+                image_url: imageUrl
+            };
+
+            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/accessories/${accId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!res.ok) throw new Error("Erreur de mise à jour.");
+
+            statusMessage.textContent = "Modifications enregistrées !";
+            statusMessage.classList.add('bg-green-50', 'text-green-600');
+            statusMessage.classList.remove('hidden');
+
+            setTimeout(() => window.location.href = '/admin/accessoires', 1500);
+
+        } catch (err) {
+            statusMessage.textContent = err.message;
+            statusMessage.classList.add('bg-red-50', 'text-red-600');
+            statusMessage.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Mettre à jour l'accessoire";
+        }
+    });
+</script>

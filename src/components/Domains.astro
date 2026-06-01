@@ -1,0 +1,83 @@
+---
+// src/components/Collections.astro
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../i18n/utils';
+import solImg from '../assets/sol.webp';
+import murImg from '../assets/mur.webp';
+import outdoorImg from '../assets/outdoor.webp';
+import decoImg from '../assets/dec.webp';
+import prestigeImg from '../assets/hero-tiles.jpg';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+
+const collections = [
+  { title: t('domains.sol'), desc: "collection", img: solImg.src, piece: t('domains.sol.piece'), href: "/collections?app=Sol+(Floor)"},
+  { title: t('domains.mur'), desc: "collection", img: murImg.src ,piece: t('domains.mur.piece'), href: "/collections?app=Mur+(Wall)"},
+  { title: t('domains.outdoor'), desc: "collection", img: outdoorImg.src, piece: t('domains.outdoor.piece'), href: "/collections?space=Outdoor"},
+  { title: t('domains.deco'), desc: "collection", img: decoImg.src, piece: t('domains.deco.piece'), href: "/collections?style=Décorations+%26+Motifs"},
+  ];
+---
+
+<section class="py-24 bg-white">
+  <div class="mx-auto max-w-7xl px-6 lg:px-10">
+    
+    <!-- HEADER : Fidèle à l'image -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+        <div class="space-y-4">
+            <!-- Label avec ligne -->
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-[1.5px] bg-stradip-cyan"></div>
+                <span class="text-stradip-cyan text-xs tracking-[0.3em] font-bold uppercase">{t('domains.label')}</span>
+            </div>
+            
+            <!-- Titre avec italic et bleu cyan -->
+            <h2 class="font-serif text-5xl md:text-6xl text-slate-900 leading-[1.1]">
+                {t('domains.title')} <span class="italic font-light bg-gradient-primary bg-clip-text text-transparent">{t('domains.title.italic')}</span>
+            </h2>
+        </div>
+    
+        <!-- Lien Voir tout à droite -->
+        <a href={translatePath('/collections')} class="text-stradip-cyan font-bold inline-flex items-center gap-2 hover:gap-4 transition-all duration-300 text-sm">
+        {t('domains.viewAll')} 
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14m-7-7 7 7-7 7" />
+            </svg>
+        </a>
+    </div>
+
+    <!-- GRILLE DE CARTES -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {collections.map((item) => (
+        <a href={translatePath(item.href)} class="group relative aspect-[3/4] overflow-hidden rounded-[1.1rem] shadow-lg block">
+            <!-- Image -->
+            <img 
+            src={item.img} 
+            alt={item.title} 
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+          
+          <!-- Dégradé bleu STRADIP -->
+          <div class="absolute inset-0 bg-gradient-to-t from-stradip-blue via-stradip-blue/40 to-transparent opacity-70 group-hover:opacity-80 transition-opacity"></div>
+          
+          <!-- Contenu texte en bas -->
+          <div class="absolute bottom-0 left-0 p-8 w-full translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+            <p class="text-[10px] tracking-[0.2em] text-stradip-cyan font-bold uppercase mb-2">
+              {item.desc}
+            </p>
+            <h3 class="font-serif text-2xl text-white font-medium">
+              {item.title}
+            </h3>
+            <p class="opacity-0 transform-gpu-10 transition-all duration-[0.5s] group-hover:opacity-100 text-card-des">{item.piece}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .font-serif {
+    font-family: 'Playfair Display', serif;
+  }
+</style>

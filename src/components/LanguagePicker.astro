@@ -1,0 +1,25 @@
+---
+import { languages } from '../i18n/ui';
+import { getLangFromUrl } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const pathname = Astro.url.pathname;
+
+// Remove current lang prefix from pathname to get the base path
+const segments = pathname.split('/');
+if (segments[1] in languages) {
+  segments.splice(1, 1);
+}
+const basePath = segments.join('/') || '/';
+---
+
+<div class="flex gap-2 items-center text-sm font-bold uppercase tracking-widest">
+  {Object.entries(languages).map(([l, label]) => (
+    <a 
+      href={`/${l}${basePath.startsWith('/') ? basePath : '/' + basePath}`}
+      class={`transition-colors duration-300 ${lang === l ? 'text-stradip-cyan' : 'text-slate-400 hover:text-slate-600'}`}
+    >
+      {l}
+    </a>
+  ))}
+</div>

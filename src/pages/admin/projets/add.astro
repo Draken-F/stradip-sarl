@@ -1,0 +1,159 @@
+---
+// src/pages/admin/projets/add.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Ajouter un Projet" currentPage="/admin/projets">
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-12">
+            <a href="/admin/projets" class="text-stradip-cyan text-[0.65rem] font-black uppercase tracking-[3px] hover:text-stradip-blue transition-colors">← Retour aux réalisations</a>
+            <h2 class="text-3xl font-bold text-slate-900 uppercase tracking-tighter mt-4">Nouveau Projet</h2>
+            <p class="text-slate-500 text-sm mt-1">Étape 1 : Informations générales du projet.</p>
+        </header>
+
+        <form id="projectForm" class="bg-white p-8 md:p-12 border border-slate-100 shadow-xl rounded-3xl space-y-8">
+            <div id="statusMessage" class="hidden p-4 rounded-xl text-sm font-bold"></div>
+
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Nom du Projet</label>
+                <input type="text" name="nom" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-stradip-cyan transition-colors font-bold text-slate-800">
+            </div>
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Ville</label>
+                <input type="text" name="ville" placeholder="Ex: Douala, Bonapriso" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-stradip-cyan transition-colors">
+            </div>
+            <div>
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-2">Introduction / Description</label>
+                <textarea name="introduction" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-stradip-cyan transition-colors resize-none"></textarea>
+            </div>
+            <div class="p-8 border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-2xl group hover:border-stradip-cyan transition-colors">
+                <label class="block text-[0.65rem] font-black uppercase tracking-widest text-slate-400 mb-4 text-center">Image de couverture principale</label>
+                
+                <!-- PREVIEW CONTAINER -->
+                <div id="imagePreviewContainer" class="hidden mb-6 relative rounded-2xl overflow-hidden aspect-video bg-slate-100 shadow-lg border border-slate-200">
+                    <img id="imagePreview" src="#" class="w-full h-full object-cover" />
+                    <button type="button" id="removeImageBtn" class="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <div class="flex justify-center" id="uploadInputArea">
+                    <input type="file" name="image" id="imageInput" required accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[0.6rem] file:font-black file:uppercase file:bg-stradip-blue file:text-white hover:file:bg-stradip-cyan file:transition-colors cursor-pointer">
+                </div>
+            </div>
+            <button type="submit" id="submitBtn" class="w-full bg-stradip-blue text-white py-5 rounded-xl text-[0.7rem] font-black uppercase tracking-[3px] hover:bg-stradip-cyan transition-all duration-500 shadow-xl disabled:opacity-50">
+                Créer et passer aux pièces →
+            </button>
+        </form>
+    </div>
+</AdminLayout>
+
+<script>
+    const form = document.getElementById('projectForm') as HTMLFormElement;
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+    const statusMessage = document.getElementById('statusMessage');
+    const imageInput = document.getElementById('imageInput') as HTMLInputElement;
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview') as HTMLImageElement;
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const uploadInputArea = document.getElementById('uploadInputArea');
+
+    imageInput?.addEventListener('change', (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (imagePreview) imagePreview.src = ev.target?.result as string;
+                imagePreviewContainer?.classList.remove('hidden');
+                uploadInputArea?.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    removeImageBtn?.addEventListener('click', () => {
+        imageInput.value = '';
+        imagePreviewContainer?.classList.add('hidden');
+        uploadInputArea?.classList.remove('hidden');
+    });
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (statusMessage) {
+            statusMessage.classList.add('hidden');
+            statusMessage.className = 'p-4 rounded-xl text-sm font-bold';
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Création du projet...';
+
+        try {
+            if (!imageInput.files || !imageInput.files[0]) throw new Error("Image de couverture requise.");
+
+            // 1. Upload
+            const formDataImage = new FormData();
+            formDataImage.append('file', imageInput.files[0]);
+            const uploadRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/upload/`, { method: 'POST', body: formDataImage });
+            if (!uploadRes.ok) throw new Error("Erreur lors de l'upload de l'image.");
+            const { url: imageUrl } = await uploadRes.json();
+
+            // 2. Data
+            const formData = new FormData(form);
+            const data = {
+                nom: formData.get('nom'),
+                ville: formData.get('ville'),
+                introduction: formData.get('introduction'),
+                image_globale: imageUrl
+            };
+
+            // 3. Post
+            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/projects/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.detail?.[0]?.msg || JSON.stringify(errorData.detail) || "Erreur lors de la création du projet.");
+            }
+            
+            const newProject = await res.json();
+            
+            if (!newProject || !newProject.id) {
+                console.error("Réponse serveur sans ID:", newProject);
+                throw new Error("Le projet a été créé mais le serveur n'a pas renvoyé d'identifiant unique.");
+            }
+
+            console.log("Projet créé ! ID:", newProject.id);
+
+            if (statusMessage) {
+                statusMessage.innerHTML = `
+                    <div class="flex flex-col gap-2">
+                        <p>✅ Projet créé avec succès !</p>
+                        <p class="text-[10px] opacity-70">Redirection vers l'ajout des pièces...</p>
+                        <a href="/admin/projets/add-section?project_id=${newProject.id}" class="underline text-white/90">Cliquez ici si la redirection ne se fait pas</a>
+                    </div>
+                `;
+                statusMessage.classList.add('bg-green-500', 'text-white');
+                statusMessage.classList.remove('hidden');
+            }
+
+            // REDIRECTION FORCÉE
+            const nextUrl = window.location.origin + `/admin/projets/add-section?project_id=${newProject.id}`;
+            
+            setTimeout(() => {
+                window.location.assign(nextUrl);
+            }, 1500);
+
+        } catch (err: any) {
+            if (statusMessage) {
+                statusMessage.textContent = err.message;
+                statusMessage.classList.add('bg-red-50', 'text-red-600');
+                statusMessage.classList.remove('hidden');
+            }
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Créer et passer aux pièces →';
+        }
+    });
+</script>

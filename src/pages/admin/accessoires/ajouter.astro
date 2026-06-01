@@ -1,0 +1,142 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const categories = ["Pose", "Finition", "Outil", "Machine", "Entretien"];
+---
+
+<AdminLayout title="Ajouter un Accessoire">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-12">
+            <a href="/admin/accessoires" class="text-stradip-cyan text-[10px] font-black uppercase tracking-[3px] hover:gap-4 flex items-center gap-2 transition-all">
+                ← Retour à la liste
+            </a>
+            <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter mt-6 italic">Nouvel <span class="text-stradip-blue">Accessoire</span></h2>
+        </header>
+
+        <form id="accessoryForm" class="bg-white p-10 md:p-16 rounded-[3rem] shadow-sm border border-slate-100 space-y-12">
+            <!-- Messages -->
+            <div id="statusMessage" class="hidden p-4 rounded-xl text-sm font-bold"></div>
+            
+            <div class="space-y-8">
+                <h3 class="text-xs font-black uppercase tracking-[4px] text-stradip-cyan border-b border-slate-50 pb-4">1. Identité de l'article</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Nom de l'accessoire / outil</label>
+                        <input type="text" name="nom" required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Catégorie technique</label>
+                        <select name="categorie_acc" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold appearance-none">
+                            {categories.map(cat => <option value={cat}>{cat}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Disponibilité</label>
+                        <select name="stock" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold appearance-none">
+                            <option value="true">En Stock</option>
+                            <option value="false">Sur Commande</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <h3 class="text-xs font-black uppercase tracking-[4px] text-stradip-cyan border-b border-slate-50 pb-4">2. Visuel & Description</h3>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Fiche descriptive</label>
+                        <textarea name="description" rows="4" placeholder="Détails techniques, usage, contenance..." class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-medium"></textarea>
+                    </div>
+                    <div class="p-12 border-4 border-dashed border-slate-50 bg-slate-50/50 rounded-[2rem] text-center hover:bg-slate-50 hover:border-stradip-cyan transition-all cursor-pointer group" id="drop-zone">
+                        <span class="text-4xl mb-4 block group-hover:scale-110 transition-transform">🛠️</span>
+                        <p id="fileName" class="text-xs font-black uppercase tracking-[2px] text-slate-400">Photo de l'accessoire</p>
+                        <input type="file" name="image" class="hidden" id="file-input" accept="image/*">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-8">
+                <button type="submit" id="submitBtn" class="w-full bg-[#0a1628] text-white py-6 rounded-2xl text-[11px] font-black uppercase tracking-[4px] hover:bg-stradip-cyan transition-all duration-500 shadow-2xl disabled:opacity-50">
+                    Enregistrer dans la boutique technique
+                </button>
+            </div>
+
+        </form>
+    </div>
+</AdminLayout>
+
+<script>
+    const form = document.getElementById('accessoryForm') as HTMLFormElement;
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input') as HTMLInputElement;
+    const fileName = document.getElementById('fileName');
+    const statusMessage = document.getElementById('statusMessage');
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+
+    dropZone?.addEventListener('click', () => fileInput.click());
+    
+    fileInput?.addEventListener('change', (e) => {
+        const files = (e.target as HTMLInputElement).files;
+        if (files && files[0] && fileName) {
+            fileName.textContent = "Image : " + files[0].name;
+        }
+    });
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (statusMessage) {
+            statusMessage.classList.add('hidden');
+            statusMessage.className = 'p-4 rounded-xl text-sm font-bold';
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enregistrement...';
+
+        try {
+            if (!fileInput.files || !fileInput.files[0]) throw new Error("Image requise.");
+
+            // 1. Upload
+            const formDataImage = new FormData();
+            formDataImage.append('file', fileInput.files[0]);
+            const uploadRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/upload/`, { method: 'POST', body: formDataImage });
+            if (!uploadRes.ok) throw new Error("Upload échoué.");
+            const { url: imageUrl } = await uploadRes.json();
+
+            // 2. Data
+            const formData = new FormData(form);
+            const data = {
+                nom: formData.get('nom'),
+                categorie_acc: formData.get('categorie_acc'),
+                stock: formData.get('stock') === 'true',
+                description: formData.get('description'),
+                image_url: imageUrl
+            };
+
+            // 3. Post
+            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/accessories/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!res.ok) throw new Error("Erreur de création.");
+
+            if (statusMessage) {
+                statusMessage.textContent = "Accessoire ajouté ! Redirection...";
+                statusMessage.classList.add('bg-green-50', 'text-green-600');
+                statusMessage.classList.remove('hidden');
+            }
+
+            setTimeout(() => window.location.href = '/admin/accessoires', 1500);
+
+        } catch (err: any) {
+            if (statusMessage) {
+                statusMessage.textContent = err.message;
+                statusMessage.classList.add('bg-red-50', 'text-red-600');
+                statusMessage.classList.remove('hidden');
+            }
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Enregistrer dans la boutique technique';
+        }
+    });
+</script>

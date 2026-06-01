@@ -1,0 +1,297 @@
+---
+// src/pages/admin/produits/modifier/[id].astro
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+
+// On utilise le mode SSR (Server Side Rendering) pour récupérer les données en temps réel
+export const prerender = false;
+
+const { id } = Astro.params;
+
+// 1. Récupération des données du produit
+let product: any = null;
+let categories = [];
+
+try {
+    const productRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/${id}`);
+    if (productRes.ok) {
+        product = await productRes.json();
+    }
+
+    const catRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/categories`);
+    if (catRes.ok) {
+        const catData = await catRes.json();
+        categories = catData.items || catData;
+    }
+} catch (e) {
+    console.error("Erreur de récupération des données", e);
+}
+
+if (!product) {
+    return Astro.redirect('/admin/produits');
+}
+
+// Préparation de l'URL d'image
+const displayImageUrl = product.image_url.startsWith('http') 
+    ? product.image_url 
+    : `${import.meta.env.PUBLIC_API_URL}${product.image_url}`;
+---
+
+<AdminLayout title={`Modifier ${product.nom}`}>
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-12">
+            <a href="/admin/produits" class="text-stradip-cyan text-[10px] font-black uppercase tracking-[3px] hover:gap-4 flex items-center gap-2 transition-all">
+                ← Retour au catalogue
+            </a>
+            <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter mt-6 italic">Modifier <span class="text-stradip-blue">{product.nom}</span></h2>
+        </header>
+
+        <form id="editForm" class="bg-white p-10 md:p-16 rounded-[3rem] shadow-sm border border-slate-100 space-y-12">
+            <!-- Messages d'état -->
+            <div id="statusMessage" class="hidden p-4 rounded-xl text-sm font-bold"></div>
+
+            <div class="space-y-8">
+                <h3 class="text-xs font-black uppercase tracking-[4px] text-stradip-cyan border-b border-slate-50 pb-4">1. Identité du produit</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Nom du modèle</label>
+                        <input type="text" name="nom" value={product.nom} required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Référence Unique</label>
+                        <input type="text" name="reference" value={product.reference} required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-mono font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Matière</label>
+                        <select name="category_id" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold appearance-none">
+                            <option value="">Standard</option>
+                            {categories.map((cat: any) => (
+                                <option value={cat.id} selected={cat.id === product.category_id}>{cat.nom_matiere}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <h3 class="text-xs font-black uppercase tracking-[4px] text-stradip-cyan border-b border-slate-50 pb-4">2. Spécifications techniques</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Dimensions (cm)</label>
+                        <input type="text" name="dimension" value={product.dimension} required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Type de pose</label>
+                        <select name="type_pose" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold appearance-none">
+                            <option selected={product.type_pose === 'Sol'}>Sol</option>
+                            <option selected={product.type_pose === 'Mur'}>Mur</option>
+                            <option selected={product.type_pose === 'Sol & Mur'}>Sol & Mur</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Style</label>
+                        <select name="style" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-bold appearance-none">
+                            <option selected={product.style === 'Standard'}>Standard</option>
+                            <option selected={product.style === 'Décoratif / Motif'}>Décoratif / Motif</option>
+                            <option selected={product.style === 'Prestige'}>Prestige</option>
+                        </select>
+                    </div>
+            <div>
+                <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-4">Couleur dominante</label>
+                <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+                    <div class="flex items-center gap-8 mb-8">
+                        <div id="colorCircle" class="w-20 h-20 rounded-[1.5rem] shadow-inner border-4 border-white transition-all duration-500" style={`background-color: ${product.couleur || "#FFFFFF"};`}></div>
+                        <div class="flex-1">
+                            <input type="text" id="colorText" value={product.couleur || "#FFFFFF"} class="bg-transparent border-none outline-none font-mono text-2xl font-black text-slate-800 uppercase w-full tracking-tighter" placeholder="#HEX">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">Code Couleur Hexadécimal</p>
+                        </div>
+                        <button type="button" id="colorBtn" class="w-14 h-14 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center hover:shadow-md transition-all text-2xl">🎨</button>
+                        <input type="color" id="colorPicker" value={product.couleur || "#FFFFFF"} class="sr-only">
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        {['#FFFFFF', '#F5F5DC', '#D2B48C', '#808080', '#2F4F4F', '#000000'].map(c => (
+                            <button type="button" class="color-preset w-10 h-10 rounded-full border-4 border-white shadow-sm hover:scale-110 transition-transform" style={`background-color: ${c};`} data-color={c}></button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-4">Pièces recommandées</label>
+                <div class="flex flex-wrap gap-3 p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem]">
+                    {['Toutes les pièces', 'Living room', 'Bedroom', 'Bathroom', 'Dining room', 'Kitchen', 'Outdoor'].map(room => (
+                        <label class="cursor-pointer group">
+                            <input 
+                                type="checkbox" 
+                                name="piece_chips" 
+                                value={room} 
+                                checked={(product.piece || "").includes(room)}
+                                class="sr-only peer"
+                            >
+                            <span class="px-8 py-4 rounded-2xl bg-white border border-slate-100 text-[11px] font-black uppercase tracking-[2px] text-slate-400 peer-checked:bg-stradip-cyan peer-checked:text-white peer-checked:border-stradip-cyan peer-checked:shadow-xl peer-checked:shadow-stradip-cyan/20 transition-all group-hover:border-stradip-cyan/30 block">
+                                {room}
+                            </span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+            </div>
+
+            <div class="space-y-8">
+                <h3 class="text-xs font-black uppercase tracking-[4px] text-stradip-cyan border-b border-slate-50 pb-4">3. Visuels & Description</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                    <div class="md:col-span-1">
+                        <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Image actuelle</label>
+                        <div class="aspect-square rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
+                            <img id="preview" src={displayImageUrl} class="w-full h-full object-cover" />
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 space-y-8">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Remplacer la photo (Optionnel)</label>
+                            <div class="p-8 border-4 border-dashed border-slate-50 bg-slate-50/50 rounded-2xl text-center cursor-pointer group" id="drop-zone">
+                                <span class="text-2xl mb-2 block group-hover:scale-110 transition-transform">🔄</span>
+                                <p id="fileName" class="text-[9px] font-black uppercase tracking-[2px] text-slate-400">Modifier l'image</p>
+                                <input type="file" name="image" class="hidden" id="file-input" accept="image/*">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Description marketing</label>
+                            <textarea name="description" rows="4" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-stradip-cyan outline-none transition-all font-medium">{product.description}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-8">
+                <button type="submit" id="submitBtn" class="w-full bg-[#0a1628] text-white py-6 rounded-[2rem] text-xs font-black uppercase tracking-[4px] hover:bg-stradip-cyan transition-all duration-500 shadow-2xl disabled:opacity-50">
+                    Mettre à jour la référence
+                </button>
+            </div>
+
+        </form>
+    </div>
+</AdminLayout>
+
+<script define:vars={{ productId: id, currentImageUrl: product.image_url }}>
+    const form = document.getElementById('editForm');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('preview');
+    const fileName = document.getElementById('fileName');
+    const statusMessage = document.getElementById('statusMessage');
+    const submitBtn = document.getElementById('submitBtn');
+
+    dropZone?.addEventListener('click', () => fileInput?.click());
+    
+    fileInput?.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (files && files[0]) {
+            fileName.textContent = "Nouveau fichier : " + files[0].name;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (preview) preview.src = event.target.result;
+            };
+            reader.readAsDataURL(files[0]);
+        }
+    });
+
+    const colorPicker = document.getElementById('colorPicker');
+    const colorText = document.getElementById('colorText');
+    const colorCircle = document.getElementById('colorCircle');
+    const colorBtn = document.getElementById('colorBtn');
+    const presets = document.querySelectorAll('.color-preset');
+
+    const updateColor = (hex) => {
+        const cleanHex = hex.startsWith('#') ? hex : '#' + hex;
+        if (colorPicker) colorPicker.value = cleanHex;
+        if (colorText) colorText.value = cleanHex.toUpperCase();
+        if (colorCircle) colorCircle.style.backgroundColor = cleanHex;
+    };
+
+    colorBtn?.addEventListener('click', () => colorPicker?.click());
+    colorPicker?.addEventListener('input', (e) => updateColor(e.target.value));
+    colorText?.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (/^#[0-9A-F]{6}$/i.test(val)) updateColor(val);
+    });
+    presets.forEach(p => p.addEventListener('click', () => {
+        const c = p.getAttribute('data-color');
+        if (c) updateColor(c);
+    }));
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Récupération des pièces sélectionnées
+        const selectedPieces = Array.from(document.querySelectorAll('input[name="piece_chips"]:checked'))
+            .map(el => el.value);
+        const pieceValue = selectedPieces.length > 0 ? selectedPieces.join(', ') : 'Toutes les pièces';
+
+        statusMessage.classList.add('hidden');
+        statusMessage.className = 'p-4 rounded-xl text-sm font-bold';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Mise à jour en cours...';
+
+        try {
+            let imageUrl = currentImageUrl;
+
+            // 1. Upload nouvelle image si sélectionnée
+            if (fileInput.files && fileInput.files[0]) {
+                const formDataImage = new FormData();
+                formDataImage.append('file', fileInput.files[0]);
+
+                const uploadRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/upload/`, {
+                    method: 'POST',
+                    body: formDataImage
+                });
+
+                if (!uploadRes.ok) throw new Error("Erreur lors de l'upload de l'image.");
+                const uploadData = await uploadRes.json();
+                imageUrl = uploadData.url;
+            }
+
+            // 2. Préparation des données
+            const formData = new FormData(form);
+            const productData = {
+                nom: formData.get('nom'),
+                reference: formData.get('reference'),
+                dimension: formData.get('dimension'),
+                type_pose: formData.get('type_pose'),
+                piece: pieceValue,
+                couleur: colorPicker.value.toUpperCase(),
+                style: formData.get('style'),
+                description: formData.get('description') || null,
+                category_id: formData.get('category_id') ? parseInt(formData.get('category_id')) : null,
+                image_url: imageUrl
+            };
+
+            // 3. Envoi PUT
+            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productData)
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.detail || "Erreur lors de la mise à jour.");
+            }
+
+            statusMessage.textContent = 'Produit mis à jour avec succès !';
+            statusMessage.classList.add('bg-green-50', 'text-green-600');
+            statusMessage.classList.remove('hidden');
+
+            setTimeout(() => {
+                window.location.href = '/admin/produits';
+            }, 1500);
+
+        } catch (error) {
+            console.error("Erreur:", error);
+            statusMessage.textContent = error.message;
+            statusMessage.classList.add('bg-red-50', 'text-red-600');
+            statusMessage.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Mettre à jour la référence';
+        }
+    });
+</script>

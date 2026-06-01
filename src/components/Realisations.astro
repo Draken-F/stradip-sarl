@@ -1,0 +1,80 @@
+---
+// src/components/Portfolio.astro
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+
+const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/projects/`);
+const data = await response.json();
+const rawProjects = data.items || data;
+
+const projects = Array.isArray(rawProjects) ? rawProjects.slice(0, 5).map((p: any, index: number) => ({
+  id: p.id.toString(),
+  type: p.ville,
+  title: p.nom,
+  location: p.ville,
+  img: p.image_globale.startsWith('http') ? p.image_globale : `${import.meta.env.PUBLIC_API_URL}${p.image_globale}`,
+  isBig: index === 0
+})) : [];
+---
+
+<section id="realisations" class="py-24 bg-card-bgr">
+    <div class="max-w-7xl mx-auto px-6">
+        
+        <!-- HEADER -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-14 gap-6">
+            <div>
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="w-8 h-[1.5px] bg-stradip-cyan"></span>
+                    <span class="text-stradip-cyan text-[10px] tracking-[0.4em] font-bold uppercase">{t('realisations.label')}</span>
+                </div>
+                <h2 class="font-serif text-5xl md:text-6xl text-slate-900 leading-[1.1]">
+                    {t('realisations.title')}<br/><span class="italic font-light bg-gradient-primary bg-clip-text text-transparent">{t('realisations.title.italic')}</span>
+                </h2>
+            </div>
+            <a href={translatePath('/realisations')} class="text-stradip-cyan font-bold inline-flex items-center gap-2 hover:gap-4 transition-all duration-300 text-sm">
+        {t('domains.viewAll')} 
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14m-7-7 7 7-7 7" />
+            </svg>
+        </a>
+        </div>
+
+        <!-- GRID ASYMÉTRIQUE (2fr 1fr 1fr) -->
+        <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr] md:grid-rows-[300px_300px] gap-[3px]">
+            {projects.map((p) => (
+                <a href={translatePath(`/realisations/${p.id}`)} class={`group relative overflow-hidden bg-[#0a1628] block ${p.isBig ? 'md:row-span-2 h-[400px] md:h-full' : 'h-[300px] md:h-full'}`}>
+                    
+                    <!-- Image avec opacité réduite par défaut -->
+                    <img 
+                        src={p.img} 
+                        alt={p.title} 
+                        class="w-full h-full object-cover opacity-65 transition-all duration-700 group-hover:opacity-40 group-hover:scale-105"
+                    />
+
+                    <!-- Infos -->
+                    <div class="absolute inset-0 p-7 flex flex-col justify-end">
+                        <div class="text-[8px] tracking-[3px] text-stradip-cyan uppercase font-bold mb-1.5 opacity-0 translate-y-2 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0">
+                            {p.type}
+                        </div>
+                        <h3 class={`font-serif text-white leading-tight mb-1.5 transition-transform duration-500 ${p.isBig ? 'text-3xl md:text-4xl' : 'text-2xl'}`}>
+                            {p.title}
+                        </h3>
+                        <p class="text-xs text-white/45 font-light">
+                            {p.location}
+                        </p>
+                    </div>
+                </a>
+            ))}
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Police Serif du logo */
+    .font-serif {
+        font-family: 'Playfair Display', serif;
+    }
+</style>

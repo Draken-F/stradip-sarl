@@ -1,0 +1,58 @@
+
+
+---
+import { Image } from 'astro:assets';
+import heroBg from '../assets/hero-tiles.jpg'; // Ton image de fond
+import Bg from '../assets/bg3.webp'; // Ton image de fond
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+---
+
+<section class="relative min-h-screen w-full flex items-center overflow-hidden bg-[#0a1120]">
+  <!-- IMAGE DE FOND -->
+  <div class="absolute inset-0 z-0">
+    <Image 
+      src={heroBg} 
+      alt="Intérieur luxueux Stradip" 
+      class="h-full w-full object-cover object-right lg:object-center"
+      loading="eager"
+    />
+  </div>
+
+  <!-- OVERLAY SOMBRE (Le dégradé à gauche) -->
+  <div class="absolute inset-0 z-10 bg-gradient-to-r from-[#12213e] via-[#12213e]/80 to-transparent w-full lg:w-2/4"></div>
+
+  <!-- CONTENU -->
+  <div class="container mx-auto px-6 md:px-12 lg:px-24 relative z-20 pt-30">
+    <div class="max-w-2xl">
+      
+
+      <!-- Titre Principal -->
+      <h1 class="font-serif text-5xl md:text-7xl lg:text-[85px] text-white leading-[1.1] mb-8 tracking-tight">
+        {t('hero.title')} <br />
+        <span class="text-stradip-light-blue italic font-light">{t('hero.title.sub')}</span> {t('hero.title.end')}
+      </h1>
+
+      <!-- Paragraphe -->
+      <p class="text-white/70 text-lg md:text-xl font-light leading-relaxed mb-12 max-w-lg">
+        {t('hero.desc')}
+      </p>
+
+      <!-- Boutons -->
+      <div class="flex flex-wrap gap-5">
+        <a href={translatePath('/collections')} class="group flex items-center gap-3 bg-stradip-light-blue hover:bg-white text-white hover:text-stradip-blue px-8 py-4 rounded-full font-bold transition-all duration-300 shadow-xl shadow-blue-900/20">
+            {t('hero.explore')}
+            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+        
+        <a href={translatePath('/#contact')} class="px-8 py-4 rounded-full border border-white/30 text-white font-bold hover:bg-white/10 transition-all duration-300">
+            {t('hero.showroom')}
+        </a>
+      </div>
+    </div>
+  </div>
+
+</section>

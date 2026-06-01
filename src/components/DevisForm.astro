@@ -1,0 +1,365 @@
+---
+// src/components/DevisForm.astro
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const tileOptions = [
+  { name: lang === 'fr' ? 'Sol Intérieur' : 'Interior Floor', icon: '🏠', price: 8500, val: 'Sol Intérieur' },
+  { name: lang === 'fr' ? 'Mural & SDB' : 'Wall & Bathroom', icon: '🛁', price: 9500, val: 'Mural & SDB' },
+  { name: lang === 'fr' ? 'Extérieur' : 'Outdoor', icon: '🌿', price: 10500, val: 'Extérieur' },
+  { name: lang === 'fr' ? 'Grande Surface XXL' : 'Large Surface XXL', icon: '📐', price: 14000, val: 'Grande Surface XXL' },
+  { name: lang === 'fr' ? 'Mosaïque & Déco' : 'Mosaic & Deco', icon: '✨', price: 17500, val: 'Mosaïque & Déco' },
+  { name: lang === 'fr' ? 'Autre / Mixte' : 'Other / Mixed', icon: '🔧', price: 11000, val: 'Autre / Mixte' },
+];
+---
+
+<section id="page-devis" class="py-24 bg-slate-50">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <div class="flex items-center justify-center gap-4 mb-4">
+        <span class="w-8 h-[1.5px] bg-stradip-cyan"></span>
+        <span class="text-stradip-cyan text-[10px] tracking-[0.5em] font-bold uppercase">{t('devis.label')}</span>
+        <span class="w-8 h-[1.5px] bg-stradip-cyan"></span>
+      </div>
+      <h2 class="font-serif text-4xl md:text-6xl text-slate-900 leading-tight">
+        {t('devis.form.title')} <span class="italic text-stradip-blue font-light">{t('devis.form.title.italic')}</span>
+      </h2>
+      <p class="mt-6 text-slate-500 max-w-2xl mx-auto">
+        {t('devis.form.desc')}
+      </p>
+    </div>
+
+    <div class="devis-container max-w-4xl mx-auto">
+      <div class="step-bar flex items-center justify-between mb-12 relative" id="stepBar">
+        <div class="step-item flex flex-col items-center gap-3 z-10 flex-1">
+          <div class="step-num active w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300" id="sn1">1</div>
+          <div class="step-label text-[10px] font-black uppercase tracking-widest text-slate-400">{t('devis.step1.label')}</div>
+        </div>
+        <div class="step-line h-[2px] bg-slate-200 flex-1 mx-4" id="sl1"></div>
+        <div class="step-item flex flex-col items-center gap-3 z-10 flex-1">
+          <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300" id="sn2">2</div>
+          <div class="step-label text-[10px] font-black uppercase tracking-widest text-slate-400">{t('devis.step2.label')}</div>
+        </div>
+        <div class="step-line h-[2px] bg-slate-200 flex-1 mx-4" id="sl2"></div>
+        <div class="step-item flex flex-col items-center gap-3 z-10 flex-1">
+          <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300" id="sn3">3</div>
+          <div class="step-label text-[10px] font-black uppercase tracking-widest text-slate-400">{t('devis.step3.label')}</div>
+        </div>
+      </div>
+
+      <div class="form-step active" id="step1">
+        <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100">
+          <h3 class="text-2xl font-bold text-stradip-blue mb-8 uppercase tracking-tighter">{t('devis.step1.title')}</h3>
+          
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            {tileOptions.map(opt => (
+              <div class="ps-option group cursor-pointer border-2 border-slate-100 rounded-2xl p-6 text-center transition-all hover:border-stradip-cyan" data-name={opt.name} data-price={opt.price} onclick="this.classList.toggle('selected')">
+                <div class="text-3xl mb-3 group-hover:scale-110 transition-transform">{opt.icon}</div>
+                <h4 class="text-xs font-bold uppercase tracking-tight text-slate-700">{opt.name}</h4>
+              </div>
+            ))}
+          </div>
+          
+          <div class="space-y-2 mb-8">
+            <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.surface.label')}</label>
+            <input type="number" id="surfaceInput" placeholder={t('devis.surface.placeholder')} min="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors">
+          </div>
+          <div class="flex justify-end">
+            <button class="bg-stradip-blue text-white px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-[2px] shadow-lg hover:bg-stradip-cyan transition-all" onclick="window.nextStep(2)">{t('devis.next')} →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-step hidden" id="step2">
+        <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100">
+          <h3 class="text-2xl font-bold text-stradip-blue mb-8 uppercase tracking-tighter">{t('devis.step2.title')}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="space-y-2">
+              <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.type.label')}</label>
+              <select id="typeBatiment" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors">
+                <option>{lang === 'fr' ? 'Maison / Villa' : 'House / Villa'}</option>
+                <option>{lang === 'fr' ? 'Appartement' : 'Apartment'}</option>
+                <option>{lang === 'fr' ? 'Bureau / Commercial' : 'Office / Commercial'}</option>
+                <option>{lang === 'fr' ? 'Hôtel / Restaurant' : 'Hotel / Restaurant'}</option>
+                <option>{lang === 'fr' ? 'Autre' : 'Other'}</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.budget.label')}</label>
+              <select class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors">
+                <option>{lang === 'fr' ? 'Moins de 500 000 F' : 'Less than 500,000 F'}</option>
+                <option>500 000 – 1 000 000 F</option>
+                <option>1 000 000 – 3 000 000 F</option>
+                <option>{lang === 'fr' ? 'Plus de 3 000 000 F' : 'More than 3,000,000 F'}</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="space-y-2">
+              <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.delay.label')}</label>
+              <select class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors">
+                <option>{lang === 'fr' ? "Urgent (moins d'1 semaine)" : "Urgent (less than 1 week)"}</option>
+                <option>{lang === 'fr' ? 'Dans 2–4 semaines' : 'In 2–4 weeks'}</option>
+                <option>{lang === 'fr' ? 'Dans 1–3 mois' : 'In 1–3 months'}</option>
+                <option>{lang === 'fr' ? 'Pas de délai précis' : 'No specific deadline'}</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.location.label')}</label>
+              <input type="text" id="localisation" placeholder="Ex: Akwa, Douala" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors">
+            </div>
+          </div>
+          <div class="space-y-2 mb-8">
+            <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.details.label')}</label>
+            <textarea placeholder={lang === 'fr' ? "Décrivez votre projet, vos préférences..." : "Describe your project, your preferences..."} class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors min-height-[120px]"></textarea>
+          </div>
+          <div class="flex justify-between">
+            <button class="text-slate-400 text-[10px] font-black uppercase tracking-[2px] hover:text-stradip-blue transition-colors" onclick="window.nextStep(1)">← {t('devis.prev')}</button>
+            <button class="bg-stradip-blue text-white px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-[2px] shadow-lg hover:bg-stradip-cyan transition-all" onclick="window.nextStep(3)">{t('devis.next')} →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-step hidden" id="step3">
+        <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100">
+          <h3 class="text-2xl font-bold text-stradip-blue mb-8 uppercase tracking-tighter">{t('devis.step3.title')}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="space-y-2">
+              <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.name.label')}</label>
+              <input type="text" id="clientNom" placeholder="Jean Dupont" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors" required>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.phone.label')}</label>
+              <input type="tel" id="clientTel" placeholder="+237 6XX XXX XXX" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors" required>
+            </div>
+          </div>
+          <div class="space-y-2 mb-6">
+            <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.email.label')}</label>
+            <input type="email" id="clientEmail" placeholder="exemple@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors">
+          </div>
+          <div class="space-y-2 mb-8">
+            <label class="text-xs font-black uppercase tracking-widest text-slate-400">{t('devis.source.label')}</label>
+            <select class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-stradip-cyan transition-colors">
+              <option>{lang === 'fr' ? "Recommandation d'un ami" : "Friend recommendation"}</option>
+              <option>{lang === 'fr' ? 'Réseaux sociaux' : 'Social media'}</option>
+              <option>{lang === 'fr' ? 'Recherche internet' : 'Internet search'}</option>
+              <option>{lang === 'fr' ? 'Panneau publicitaire' : 'Billboard'}</option>
+              <option>{lang === 'fr' ? 'Autre' : 'Other'}</option>
+            </select>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-6 mb-8 text-[11px] text-slate-500 font-medium leading-relaxed">
+            {t('devis.consent')}
+          </div>
+          <div class="flex justify-between items-center">
+            <button class="text-slate-400 text-[10px] font-black uppercase tracking-[2px] hover:text-stradip-blue transition-colors" onclick="window.nextStep(2)">← {t('devis.prev')}</button>
+            <button class="bg-stradip-cyan text-white px-10 py-4 rounded-full text-[11px] font-black uppercase tracking-[2px] shadow-xl hover:bg-stradip-blue transition-all" onclick="window.submitDevis()">🚀 {t('devis.generate')}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="success-state hidden text-center py-10 animate-fadeIn" id="successDevis">
+        <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-6">✅</div>
+        <h2 class="font-serif text-3xl text-slate-900 mb-2">{t('devis.success.title')}</h2>
+        <p class="text-slate-500 mb-8 max-w-lg mx-auto text-sm">{t('devis.success.desc')}</p>
+        
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 text-left p-6 md:p-10 max-w-2xl mx-auto mb-10 font-sans" id="devisFactureResult">
+          </div>
+
+        <p class="text-slate-400 text-xs mb-8">{t('devis.success.contact')} <strong>+237 674 500 040</strong></p>
+        <a href={lang === 'en' ? '/en' : '/'} class="inline-block bg-stradip-blue text-white px-10 py-4 rounded-full text-[11px] font-black uppercase tracking-[2px] shadow-xl hover:bg-stradip-cyan transition-all">{t('devis.backHome')}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  window.currentStep = 1;
+
+  window.nextStep = function(n) {
+    if (window.currentStep === 1 && n > 1) {
+      const surface = document.getElementById('surfaceInput').value;
+      const selectedOptions = document.querySelectorAll('.ps-option.selected');
+      if (!surface || surface <= 0) {
+        alert(window.location.pathname.startsWith('/en') ? 'Please enter a valid surface (m²).' : 'Veuillez entrer une surface valide (m²).');
+        return;
+      }
+      if (selectedOptions.length === 0) {
+        alert(window.location.pathname.startsWith('/en') ? 'Please select at least one tile type.' : 'Veuillez sélectionner au moins un type de carrelage.');
+        return;
+      }
+    }
+
+    const prevStepEl = document.getElementById('step' + window.currentStep);
+    const nextStepEl = document.getElementById('step' + n);
+    const snPrev = document.getElementById('sn' + window.currentStep);
+    const snNext = document.getElementById('sn' + n);
+    const sl = document.getElementById('sl' + (n > window.currentStep ? window.currentStep : n));
+
+    if (prevStepEl) prevStepEl.classList.add('hidden');
+    if (nextStepEl) nextStepEl.classList.remove('hidden');
+
+    if (n > window.currentStep) {
+        snPrev.classList.remove('active');
+        snPrev.classList.add('done');
+        if (sl) sl.classList.add('done');
+    } else {
+        snNext.classList.remove('done');
+        snNext.classList.add('active');
+        if (sl) sl.classList.remove('done');
+    }
+    
+    snNext.classList.add('active');
+    window.currentStep = n;
+    
+    window.scrollTo({ top: 200, behavior: 'smooth' });
+  };
+
+  window.submitDevis = function() {
+    const nom = document.getElementById('clientNom').value;
+    const tel = document.getElementById('clientTel').value;
+    if (!nom || !tel) {
+      alert(window.location.pathname.startsWith('/en') ? 'Please fill in the required fields (*)' : 'Veuillez remplir les champs obligatoires (*)');
+      return;
+    }
+
+    const surface = parseFloat(document.getElementById('surfaceInput').value) || 0;
+    const selectedOptions = document.querySelectorAll('.ps-option.selected');
+    const batiment = document.getElementById('typeBatiment').value;
+    const localisation = document.getElementById('localisation').value || (window.location.pathname.startsWith('/en') ? 'Not specified' : 'Non spécifiée');
+    const email = document.getElementById('clientEmail').value || (window.location.pathname.startsWith('/en') ? 'Not provided' : 'Non fourni');
+    
+    let totalMateriel = 0;
+    let lignesHTML = '';
+
+    const isEn = window.location.pathname.startsWith('/en');
+
+    selectedOptions.forEach(option => {
+      const name = option.getAttribute('data-name');
+      const pricePerM2 = parseFloat(option.getAttribute('data-price'));
+      const ligneTotal = pricePerM2 * surface;
+      totalMateriel += ligneTotal;
+
+      lignesHTML += `
+        <tr class="border-b border-slate-100 text-sm">
+          <td class="py-3 font-medium text-slate-700">${name}</td>
+          <td class="py-3 text-right text-slate-500">${pricePerM2.toLocaleString()} F</td>
+          <td class="py-3 text-right text-slate-500">${surface} m²</td>
+          <td class="py-3 text-right font-semibold text-slate-900">${ligneTotal.toLocaleString()} F</td>
+        </tr>
+      `;
+    });
+
+    const tarifPoseM2 = 3500; 
+    const totalPose = tarifPoseM2 * surface;
+    const totalGeneral = totalMateriel + totalPose;
+
+    const numDevis = 'ST-' + Math.floor(100000 + Math.random() * 900000);
+    const dateAujourdhui = new Date().toLocaleDateString(isEn ? 'en-US' : 'fr-FR');
+
+    const factureResultContainer = document.getElementById('devisFactureResult');
+    factureResultContainer.innerHTML = `
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-6 mb-6 gap-4">
+        <div>
+          <h4 class="text-xl font-black tracking-tight text-stradip-blue uppercase">STRADIP SARL</h4>
+          <p class="text-xs text-slate-400">${isEn ? 'Premium Coatings & Tiles' : 'Revêtements & Carrelages haut de gamme'}</p>
+        </div>
+        <div class="sm:text-right">
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">${isEn ? 'Estimated Quote' : 'Devis Estimatif'}</p>
+          <p class="text-sm font-mono font-bold text-slate-800">${numDevis}</p>
+          <p class="text-xs text-slate-400">Date : ${dateAujourdhui}</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-xs bg-slate-50 p-4 rounded-xl">
+        <div>
+          <span class="font-bold text-slate-400 block uppercase tracking-wider mb-1">${isEn ? 'Recipient:' : 'Destinataire :'}</span>
+          <strong class="text-slate-800 text-sm">${nom}</strong>
+          <p class="text-slate-500 mt-1">📞 ${tel}</p>
+          <p class="text-slate-500">✉️ ${email}</p>
+        </div>
+        <div>
+          <span class="font-bold text-slate-400 block uppercase tracking-wider mb-1">${isEn ? 'Project Details:' : 'Détails Projet :'}</span>
+          <p class="text-slate-600"><strong>Type :</strong> ${batiment}</p>
+          <p class="text-slate-600"><strong>${isEn ? 'Location:' : 'Lieu :'}</strong> ${localisation}</p>
+        </div>
+      </div>
+
+      <table class="w-full text-left mb-6">
+        <thead>
+          <tr class="border-b border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <th class="pb-2">${isEn ? 'Material Description' : 'Description Matériel'}</th>
+            <th class="pb-2 text-right">PU (m²)</th>
+            <th class="pb-2 text-right">Surface</th>
+            <th class="pb-2 text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lignesHTML}
+          <tr class="border-b border-slate-100 text-sm">
+            <td class="py-3 font-medium text-slate-600">${isEn ? 'Labor Estimation (Installation)' : "Estimation Main d'œuvre (Pose)"}</td>
+            <td class="py-3 text-right text-slate-500">${tarifPoseM2.toLocaleString()} F</td>
+            <td class="py-3 text-right text-slate-500">${surface} m²</td>
+            <td class="py-3 text-right font-semibold text-slate-900">${totalPose.toLocaleString()} F</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="w-full sm:w-64 ml-auto border-t pt-4 space-y-2 text-sm">
+        <div class="flex justify-between text-slate-500">
+          <span>${isEn ? 'Total Materials:' : 'Total Matériaux :'}</span>
+          <span>${totalMateriel.toLocaleString()} F</span>
+        </div>
+        <div class="flex justify-between text-slate-500">
+          <span>${isEn ? 'Estimated Installation:' : 'Total Pose estimé :'}</span>
+          <span>${totalPose.toLocaleString()} F</span>
+        </div>
+        <div class="flex justify-between pt-2 border-t text-base font-bold text-slate-900">
+          <span>${isEn ? 'Grand Total:' : 'Total Global :'}</span>
+          <span class="text-stradip-blue">${totalGeneral.toLocaleString()} FCFA</span>
+        </div>
+      </div>
+      
+      <div class="mt-8 pt-4 border-t border-dashed border-slate-200 text-[10px] text-slate-400 leading-relaxed text-center">
+        ${isEn ? '* This document is an automated estimate based on current STRADIP SARL catalog prices and does not constitute a definitive contractual commitment without technical validation from our experts.' : '* Ce document est une estimation automatisée basée sur les prix catalogues courants de STRADIP SARL et ne constitue pas un engagement contractuel définitif sans validation technique de nos experts.'}
+      </div>
+    `;
+
+    document.getElementById('step' + window.currentStep).classList.add('hidden');
+    document.getElementById('stepBar').classList.add('hidden');
+    document.getElementById('successDevis').classList.remove('hidden');
+    window.scrollTo({ top: 200, behavior: 'smooth' });
+  };
+</script>
+
+<style>
+  .step-num {
+    background: #f1f5f9;
+    color: #94a3b8;
+  }
+  .step-num.active {
+    background: var(--color-stradip-blue, #004a8d);
+    color: white;
+    box-shadow: 0 0 20px rgba(0, 74, 141, 0.3);
+  }
+  .step-num.done {
+    background: var(--color-stradip-cyan, #00adef);
+    color: white;
+  }
+  .step-line.done {
+    background: var(--color-stradip-cyan, #00adef);
+  }
+  .ps-option.selected {
+    border-color: var(--color-stradip-cyan, #00adef);
+    background: rgba(0, 173, 239, 0.05);
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease forwards;
+  }
+</style>

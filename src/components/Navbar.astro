@@ -1,0 +1,157 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../assets/stradip-logo.png'; // Ton logo
+import LanguagePicker from './LanguagePicker.astro';
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+---
+
+
+
+
+<nav id="navbar" class="fixed w-full z-50 transition-all duration-500 py-6 bg-white/50 shadow-sm">
+  <div class="container mx-auto px-6 md:px-12 lg:px-24 flex justify-between items-center">
+    
+    <!-- LOGO -->
+    <a href={translatePath('/')} class="flex items-center gap-4 group cursor-pointer relative z-[60]">
+      <div class="w-14 h-14">
+        <Image src={logo} alt="Logo Stradip" class="w-full h-full object-cover" />
+      </div>
+      <div class="flex flex-col">
+        <span id="nav-logo-text" class="text-xl font-bold tracking-tighter leading-none text-stradip-blue transition-colors duration-300">STRADIP</span>
+        <span class="text-[10px] font-bold tracking-[3px] text-sarl-blue leading-none mt-1 uppercase">Sarl</span>
+      </div>
+    </a>
+
+    <div class="m-4"></div>
+    <!-- LIENS DE NAVIGATION (Desktop) -->
+    <div class="hidden lg:flex items-center gap-7">
+      <a href={translatePath('/')} class="nav-link group relative text-slate-700 hover:text-slate-900 text-[10px] font-bold uppercase tracking-[2px] transition-colors py-1">
+        {t('nav.home')}
+        <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-stradip-cyan transition-all duration-300 group-hover:w-full"></span>
+      </a>
+      <a href={translatePath('/collections')} class="nav-link group relative text-slate-700 hover:text-slate-900 text-[10px] font-bold uppercase tracking-[2px] transition-colors py-1">
+        {t('nav.collections')}
+        <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-stradip-cyan transition-all duration-300 group-hover:w-full"></span>
+      </a>
+      <a href={translatePath('/accessoires')} class="nav-link group relative text-slate-700 hover:text-slate-900 text-[10px] font-bold uppercase tracking-[2px] transition-colors py-1">
+        {t('nav.accessoires')}
+        <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-stradip-cyan transition-all duration-300 group-hover:w-full"></span>
+      </a>
+      <a href={translatePath('/realisations')} class="nav-link group relative text-slate-700 hover:text-slate-900 text-[10px] font-bold uppercase tracking-[2px] transition-colors py-1">
+        {t('nav.realisations')}
+        <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-stradip-cyan transition-all duration-300 group-hover:w-full"></span>
+      </a>
+      <a href={translatePath('/#contact')} class="nav-link group relative text-slate-700 hover:text-slate-900 text-[11px] font-bold uppercase tracking-[2px] transition-colors py-1">
+        {t('nav.contact')}
+        <span class="absolute bottom-0 left-0 w-0 h-[2px] bg-stradip-cyan transition-all duration-300 group-hover:w-full"></span>
+      </a>
+      
+      <div class="h-4 w-px bg-slate-200 mx-2"></div>
+      <LanguagePicker />
+    </div>
+    <div class="m-2"></div>
+
+    <!-- ACTIONS -->
+    <div class="flex items-center gap-6 relative z-[60]">
+      <a href={translatePath('/devis')} id="cta-button" class="hidden sm:block bg-[#004a8d] text-slate-100 px-7 py-3 rounded-full text-[9px] font-black uppercase tracking-[2px] shadow-xl hover:bg-stradip-cyan hover:text-white transition-all duration-300">
+        {t('nav.cta')}
+      </a>
+
+      <!-- HAMBURGER BUTTON -->
+      <button id="mobile-menu-button" class="lg:hidden flex flex-col justify-center items-center w-10 h-10 space-y-1.5 focus:outline-none" aria-label="Menu">
+        <span class="hamburger-line w-6 h-0.5 bg-stradip-blue transition-all duration-300"></span>
+        <span class="hamburger-line w-6 h-0.5 bg-stradip-blue transition-all duration-300"></span>
+        <span class="hamburger-line w-6 h-0.5 bg-stradip-blue transition-all duration-300"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE MENU OVERLAY -->
+  <div id="mobile-menu" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center translate-x-full transition-transform duration-500 lg:hidden">
+    <div class="flex flex-col items-center gap-8">
+      <a href={translatePath('/')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.home')}</a>
+      <a href={translatePath('/collections')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.collections')}</a>
+      <a href={translatePath('/accessoires')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.accessoires')}</a>
+      <a href={translatePath('/realisations')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.realisations')}</a>
+      <a href={translatePath('/#contact')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.contact')}</a>
+      
+      <div class="mt-4">
+        <LanguagePicker />
+      </div>
+
+      <a href={translatePath('/devis')} class="mt-8 bg-stradip-blue text-white px-10 py-4 rounded-full text-xs font-black uppercase tracking-[3px] shadow-2xl">
+        {t('nav.cta')}
+      </a>
+    </div>
+
+    <!-- Infos contact en bas -->
+    <div class="absolute bottom-12 text-center space-y-2">
+      <p class="text-[10px] font-black uppercase tracking-[3px] text-slate-400">Contact Douala</p>
+      <p class="text-sm font-bold text-stradip-blue">+237 674 500 040</p>
+    </div>
+  </div>
+</nav>
+
+<script>
+  const nav = document.getElementById('navbar');
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const hamburgerLines = document.querySelectorAll('.hamburger-line');
+  const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+  // Scroll logic
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      nav?.classList.add('bg-white/95', 'backdrop-blur-xl', 'py-4', 'shadow-md', 'border-b', 'border-slate-100');
+      nav?.classList.remove('py-6', 'bg-white/50');
+    } else {
+      nav?.classList.remove('bg-white/95', 'backdrop-blur-xl', 'py-4', 'shadow-md', 'border-b', 'border-slate-100');
+      nav?.classList.add('py-6', 'bg-white/50');
+    }
+  });
+
+  // Mobile menu toggle logic
+  let isMenuOpen = false;
+
+  function toggleMenu() {
+    isMenuOpen = !isMenuOpen;
+    
+    if (isMenuOpen) {
+      mobileMenu?.classList.remove('translate-x-full');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling
+      
+      // Animate hamburger to X
+      hamburgerLines[0].classList.add('rotate-45', 'translate-y-2');
+      hamburgerLines[1].classList.add('opacity-0');
+      hamburgerLines[2].classList.add('-rotate-45', '-translate-y-2');
+    } else {
+      mobileMenu?.classList.add('translate-x-full');
+      document.body.style.overflow = ''; // Restore scrolling
+      
+      // Animate X back to hamburger
+      hamburgerLines[0].classList.remove('rotate-45', 'translate-y-2');
+      hamburgerLines[1].classList.remove('opacity-0');
+      hamburgerLines[2].classList.remove('-rotate-45', '-translate-y-2');
+    }
+  }
+
+  mobileMenuButton?.addEventListener('click', toggleMenu);
+
+  // Close menu when clicking on a link
+  mobileNavLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (isMenuOpen) toggleMenu();
+    });
+  });
+</script>
+
+<style>
+  /* Optionnel : tu peux ajuster l'épaisseur de la ligne ici */
+  .nav-link span {
+    display: block;
+  }
+</style>

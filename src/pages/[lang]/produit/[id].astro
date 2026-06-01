@@ -1,0 +1,358 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+import Footer from '../../../components/Footer.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import { useTranslations, useTranslatedPath } from '../../../i18n/utils';
+
+export async function getStaticPaths() {
+  const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/`);
+  const data = await response.json();
+  const products = data.items || data;
+  const locales = ['fr', 'en'];
+
+  if (!Array.isArray(products)) return [];
+
+  return locales.flatMap(lang => 
+    products.map((p: any) => ({
+      params: { lang, id: p.id.toString() },
+      props: { 
+        product: p,
+        allProducts: products
+      },
+    }))
+  );
+}
+
+const { lang } = Astro.params;
+const { product, allProducts } = Astro.props;
+const t = useTranslations(lang as any);
+const translatePath = useTranslatedPath(lang as any);
+
+// Calcul des produits similaires
+const similaires = allProducts
+    .filter((item: any) => item.id.toString() !== product.id.toString())
+    .slice(0, 4)
+    .map((s: any) => ({
+        id: s.id,
+        nom: s.nom,
+        image_url: s.image_url.startsWith('http') ? s.image_url : `${import.meta.env.PUBLIC_API_URL}${s.image_url}`,
+        style: s.style,
+        dimension: s.dimension
+    }));
+
+const p = {
+    ...product,
+    image_url: product.image_url.startsWith('http') ? product.image_url : `${import.meta.env.PUBLIC_API_URL}${product.image_url}`,
+    nom_matiere: product.category ? product.category.nom_matiere : (lang === 'fr' ? 'Standard' : 'Standard'),
+    stock: 1 
+};
+---
+
+<Layout title={`${p.nom} | STRADIP`}>
+    <Navbar />
+
+    <main class="min-h-screen bg-white pb-24 pt-32">
+        <nav class="max-w-7xl mx-auto px-6 mb-12">
+            <div class="flex items-center gap-3 text-[10px] uppercase tracking-[3px] text-slate-400">
+                <a href={translatePath('/')} class="hover:text-stradip-cyan transition-colors">{t('nav.home')}</a>
+                <span class="opacity-30">/</span>
+                <a href={translatePath('/collections')} class="hover:text-stradip-cyan transition-colors">{t('nav.collections')}</a>
+                <span class="opacity-30">/</span>
+                <span class="text-slate-900 font-black">{p.nom}</span>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col lg:flex-row gap-20">
+
+                <div class="lg:w-3/5">
+                    <div class="relative group overflow-hidden bg-slate-50 aspect-[4/5] md:aspect-[8/6] shadow-2xl rounded-sm">
+                        <img 
+                            src={p.image_url} 
+                            alt={p.nom} 
+                            class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                        />
+                        
+                        <div class="absolute top-8 left-8">
+                            <div class="bg-white/90 backdrop-blur-md px-5 py-2.5 text-[9px] font-black uppercase tracking-[3px] text-slate-900 border border-slate-100 shadow-sm flex items-center gap-2">
+                                <span class={`w-2 h-2 rounded-full ${p.stock > 0 ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+                                {p.stock > 0 ? (lang === 'fr' ? 'Disponible' : 'Available') : (lang === 'fr' ? 'Sur Commande' : 'On Order')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-2/5 flex flex-col justify-center space-y-10">
+                    <div class="space-y-6">
+                        <h1 class="font-display text-5xl md:text-6xl text-slate-900 leading-tight italic">
+                            {p.nom}
+                        </h1>
+                        <!-- <p class="text-slate-500 font-light leading-relaxed text-lg italic border-l-2 border-stradip-cyan pl-6">
+                            {p.description || (lang === 'fr' ? "Une pièce maîtresse de notre collection, alliant élégance et durabilité pour transformer vos espaces." : "A masterpiece of our collection, combining elegance and durability to transform your spaces.")}
+                        </p> -->
+                    </div>
+
+                    <div class="border-t border-slate-100 ">
+                        <h3 class="text-[10px] font-black uppercase tracking-[4px] text-stradip-cyan mb-8">{lang === 'fr' ? "Spécifications d'Architecte" : "Architect Specifications"}</h3>
+                        
+                        <div class="grid grid-cols-2 gap-x-8 gap-y-10">
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase tracking-widest mb-2 font-bold">{lang === 'fr' ? 'Référence' : 'Reference'}</p>
+                                <p class="text-sm font-semibold text-slate-800">{p.reference}</p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Dimensions</p>
+                                <p class="text-sm font-semibold text-slate-800">{p.dimension} cm</p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase tracking-widest mb-2 font-bold">{lang === 'fr' ? 'Usage Prévu' : 'Intended Use'}</p>
+                                <p class="text-sm font-semibold text-slate-800">{p.type_pose}</p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase tracking-widest mb-2 font-bold">{lang === 'fr' ? 'Espaces recommandés' : 'Recommended Spaces'}</p>
+                                <p class="text-sm font-semibold text-slate-800">{p.piece}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-[9px] text-slate-400 uppercase tracking-widest mb-3 font-bold">{lang === 'fr' ? 'Teinte & Texture' : 'Tint & Texture'}</p>
+                                <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-lg w-fit">
+                                    <div class="w-8 h-8 rounded-full border border-white shadow-inner" style={`background-color: ${p.couleur || '#f8f9fa'};`}></div>
+                                    <div>
+                                        <p class="text-[11px] font-bold text-slate-800 uppercase tracking-tighter">{p.style}</p>
+                                        <p class="text-[10px] text-slate-400 italic">{p.nom_matiere}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <a 
+                            href={`https://wa.me/237674500040?text=${lang === 'fr' ? 'Bonjour STRADIP, je souhaiterais un devis personnalisé pour le modèle' : 'Hello STRADIP, I would like a personalized quote for the model'} ${p.nom} (Réf: ${p.reference})`}
+                            target="_blank"
+                            class="group relative flex items-center justify-center w-full bg-[#0a1628] text-white py-6 px-10 text-[10px] font-black uppercase tracking-[4px] hover:bg-stradip-cyan transition-all duration-500 overflow-hidden"
+                        >
+                            <span class="relative z-10 flex items-center gap-4">
+                                {lang === 'fr' ? 'Obtenir un devis personnalisé' : 'Get a personalized quote'}
+                                <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.417-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.305 1.652zm6.599-3.835l.354.21c1.425.848 3.067 1.297 4.75 1.298 5.301 0 9.613-4.313 9.615-9.613.002-2.568-1.002-4.983-2.826-6.809-1.825-1.826-4.242-2.83-6.808-2.831-5.304 0-9.615 4.313-9.618 9.614-.002 1.849.528 3.653 1.535 5.239l.233.366-1.008 3.685 3.769-.989z" />
+                                </svg>
+                            </span>
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button 
+                            id="open-ar-btn"
+                            class="group relative flex items-center justify-center w-full bg-white border border-slate-200 text-slate-900 py-5 px-10 text-[10px] font-black uppercase tracking-[4px] hover:border-slate-900 hover:bg-slate-50 transition-all duration-300"
+                        >
+                            <span class="flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v4m0 0l-2-2m2 2l2-2" />
+                                </svg>
+                                {lang === 'fr' ? 'Voir dans ma pièce' : 'View in my room'}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {similaires.length > 0 && (
+                <section class="mt-40 pt-20 border-t border-slate-100">
+                    <div class="flex items-center gap-6 mb-16">
+                        <h2 class="font-display text-3xl font-bold text-slate-900 uppercase italic">{lang === 'fr' ? 'Inspirations similaires' : 'Similar Inspirations'}</h2>
+                        <div class="flex-grow h-px bg-slate-100"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+                        {similaires.map((s) => (
+                            <ProductCard 
+                                id={s.id}
+                                nom={s.nom}
+                                image={s.image_url}
+                                style={s.style}
+                                category={s.dimension}
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
+        </div>
+
+        <div id="visualizer-app" class="fixed inset-0 z-50 bg-slate-100 hidden flex-col md:flex-row font-sans">
+    
+    <aside class="w-full md:w-80 bg-white border-r border-slate-200 h-full flex flex-col z-20 shadow-xl">
+        
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div>
+                <h2 class="font-black text-xl tracking-tighter text-slate-900">STRADIP</h2>
+                <p class="text-[9px] uppercase tracking-widest text-slate-400">{lang === 'fr' ? 'Studio Virtuel' : 'Virtual Studio'}</p>
+            </div>
+            <button id="close-vis-btn" class="p-2 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <div class="flex border-b border-slate-100 bg-slate-50/50">
+            <button class="flex-1 py-4 text-sm font-bold border-b-2 border-stradip-cyan text-slate-900">{lang === 'fr' ? 'Sols' : 'Floors'}</button>
+            <button class="flex-1 py-4 text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors">{lang === 'fr' ? 'Murs (Bientôt)' : 'Walls (Soon)'}</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+            <button class="texture-btn w-full text-left bg-white p-3 border-2 border-stradip-cyan rounded-xl shadow-sm flex gap-4 items-center" data-texture={p.image_url} data-width={p.dimension.split('x')[0] || '60'} data-height={p.dimension.split('x')[1] || '120'}>
+                <img src={p.image_url} class="w-14 h-14 object-cover rounded-lg shadow-inner" />
+                <div>
+                    <p class="font-bold text-sm text-slate-800">{p.nom}</p>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mt-1">{p.dimension} cm</p>
+                </div>
+            </button>
+
+            {similaires.map((s) => (
+                <button class="texture-btn w-full text-left bg-white p-3 border border-transparent hover:border-slate-200 rounded-xl shadow-sm hover:shadow-md flex gap-4 items-center transition-all opacity-80 hover:opacity-100" data-texture={s.image_url} data-width={s.dimension.split('x')[0] || '60'} data-height={s.dimension.split('x')[1] || '60'}>
+                    <img src={s.image_url} class="w-14 h-14 object-cover rounded-lg shadow-inner" />
+                    <div>
+                        <p class="font-bold text-sm text-slate-800">{s.nom}</p>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider mt-1">{s.dimension} cm</p>
+                    </div>
+                </button>
+            ))}
+        </div>
+    </aside>
+
+    <main class="flex-1 relative bg-slate-200 overflow-hidden">
+        <div id="vis-bg-container" class="absolute inset-0 bg-cover bg-center transition-all duration-700"></div>
+        
+        <canvas id="vis-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+        <div class="absolute top-6 left-6 right-6 flex justify-between items-center z-10 pointer-events-none">
+            <div class="bg-white/80 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white flex gap-4 pointer-events-auto">
+                <button id="upload-photo-btn" class="text-xs font-bold uppercase tracking-wider text-slate-700 hover:text-stradip-cyan flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    {lang === 'fr' ? 'Ma Pièce' : 'My Room'}
+                </button>
+                <div class="w-px h-4 bg-slate-300 my-auto"></div>
+                <button id="demo-room-btn" class="text-xs font-bold uppercase tracking-wider text-slate-700 hover:text-stradip-cyan">
+                    {lang === 'fr' ? 'Pièce Démo' : 'Demo Room'}
+                </button>
+            </div>
+        </div>
+
+        <input type="file" id="vis-file-input" class="hidden" accept="image/*" />
+    </main>
+</div>
+    </main>
+
+    <Footer />
+</Layout>
+
+<style>
+    .font-serif { font-family: 'Playfair Display', serif; }
+</style>
+
+<script>
+    import { TileEngine } from '../../../utils/TileEngine';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const openBtn = document.getElementById('open-ar-btn');
+        const closeBtn = document.getElementById('close-vis-btn');
+        const appContainer = document.getElementById('visualizer-app');
+        const bgContainer = document.getElementById('vis-bg-container');
+        const canvas = document.getElementById('vis-canvas') as HTMLCanvasElement;
+        
+        const uploadBtn = document.getElementById('upload-photo-btn');
+        const fileInput = document.getElementById('vis-file-input') as HTMLInputElement;
+        const demoBtn = document.getElementById('demo-room-btn');
+        const textureBtns = document.querySelectorAll('.texture-btn');
+
+        const demoImageUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200"; 
+
+        let visualizer: any = null;
+        if (canvas) visualizer = new TileEngine(canvas);
+
+        openBtn?.addEventListener('click', () => {
+            appContainer?.classList.remove('hidden');
+            appContainer?.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            startVisualizer(demoImageUrl);
+        });
+
+        closeBtn?.addEventListener('click', () => {
+            appContainer?.classList.add('hidden');
+            appContainer?.classList.remove('flex');
+            document.body.style.overflow = '';
+        });
+
+        textureBtns.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                textureBtns.forEach(b => {
+                    b.classList.remove('border-stradip-cyan', 'border-2');
+                    b.classList.add('border-transparent', 'border', 'opacity-80');
+                });
+                btn.classList.add('border-stradip-cyan', 'border-2');
+                btn.classList.remove('border-transparent', 'border', 'opacity-80');
+
+                const texUrl = btn.getAttribute('data-texture');
+                const width = parseFloat(btn.getAttribute('data-width') || '60');
+                const height = parseFloat(btn.getAttribute('data-height') || '60');
+
+                if (texUrl && visualizer) {
+                    await visualizer.changeTexture(texUrl, width, height);
+                }
+            });
+        });
+
+        uploadBtn?.addEventListener('click', () => fileInput.click());
+
+        fileInput?.addEventListener('change', (e) => {
+            const files = (e.target as HTMLInputElement).files;
+            if (files && files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const result = event.target?.result;
+                    if (typeof result === 'string') startVisualizer(result);
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        });
+
+        demoBtn?.addEventListener('click', () => {
+            startVisualizer(demoImageUrl);
+        });
+
+        async function startVisualizer(imageSrc: string) {
+            if (!visualizer || !bgContainer) return;
+            bgContainer.style.backgroundImage = `url(${imageSrc})`;
+
+            try {
+                const activeBtn = document.querySelector('.texture-btn.border-stradip-cyan');
+                const texUrl = activeBtn?.getAttribute('data-texture') || '';
+                const width = parseFloat(activeBtn?.getAttribute('data-width') || '60');
+                const height = parseFloat(activeBtn?.getAttribute('data-height') || '120');
+
+                await visualizer.loadTile(texUrl, width, height);
+
+                const response = await fetch(imageSrc);
+                const blob = await response.blob();
+                const formData = new FormData();
+                formData.append('file', blob);
+
+                const aiResponse = await fetch(`${import.meta.env.PUBLIC_API_URL}/segment-floor`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (aiResponse.ok) {
+                    const data = await aiResponse.json();
+                    const maskBase64 = `data:image/png;base64,${data.mask}`;
+                    await visualizer.setupRoom(imageSrc, maskBase64);
+                }
+                visualizer.setRotation(-1.2);
+
+            } catch (err) {
+                console.error("Erreur Backend IA:", err);
+                visualizer.setRotation(-1.2);
+            }
+        }
+    });
+</script>

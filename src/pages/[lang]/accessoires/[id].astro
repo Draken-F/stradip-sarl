@@ -1,0 +1,154 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navbar from '../../../components/Navbar.astro';
+import Footer from '../../../components/Footer.astro';
+import { useTranslations, useTranslatedPath } from '../../../i18n/utils';
+
+export async function getStaticPaths() {
+  const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/accessories/`);
+  const data = await response.json();
+  const accessories = data.items || data;
+  const locales = ['fr', 'en'];
+
+  if (!Array.isArray(accessories)) return [];
+
+  return locales.flatMap(lang => 
+    accessories.map((acc: any) => ({
+      params: { lang, id: acc.id.toString() },
+      props: { accId: acc.id },
+    }))
+  );
+}
+
+const { lang } = Astro.params;
+const { accId } = Astro.props;
+const t = useTranslations(lang as any);
+const translatePath = useTranslatedPath(lang as any);
+
+// Récupération des détails de l'accessoire
+const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/accessories/${accId}`);
+const rawAcc = await response.json();
+
+const acc = {
+    id: rawAcc.id,
+    nom: rawAcc.nom,
+    categorie: rawAcc.categorie_acc,
+    image: rawAcc.image_url.startsWith('http') ? rawAcc.image_url : `${import.meta.env.PUBLIC_API_URL}${rawAcc.image_url}`,
+    desc: rawAcc.description || (lang === 'fr' ? "Équipement professionnel sélectionné pour sa qualité et sa durabilité." : "Professional equipment selected for its quality and durability."),
+    usage: rawAcc.usage || (lang === 'fr' ? "Non spécifié" : "Not specified"),
+    conditionnement: rawAcc.conditionnement || (lang === 'fr' ? "Unité" : "Unit"),
+    stock: rawAcc.stock
+};
+
+// Récupération des suggestions (même catégorie)
+const allRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/accessories/`);
+const allData = await allRes.json();
+const suggestions = (allData.items || allData)
+    .filter((s: any) => s.categorie_acc === acc.categorie && s.id !== acc.id)
+    .slice(0, 4)
+    .map((s: any) => ({
+        id: s.id,
+        nom: s.nom,
+        image: s.image_url.startsWith('http') ? s.image_url : `${import.meta.env.PUBLIC_API_URL}${s.image_url}`
+    }));
+---
+
+<Layout title={`${acc.nom} | Boutique Technique STRADIP`}>
+    <Navbar />
+
+    <main class="min-h-screen bg-white pb-24 pt-32">
+        <!-- BREADCRUMB : Inspiré de fiche_accessoire.php -->
+        <nav class="max-w-7xl mx-auto px-6 md:px-12 py-8 text-[0.6rem] uppercase tracking-[3px] text-gray-400">
+            <a href={translatePath('/')} class="hover:text-stradip-cyan transition-colors">{t('nav.home')}</a>
+            <span class="mx-3">/</span>
+            <a href={translatePath('/accessoires')} class="hover:text-stradip-cyan transition-colors">{t('accessoires.title')}</a>
+            <span class="mx-3">/</span>
+            <span class="text-slate-900 font-black">{acc.nom}</span>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="flex flex-col lg:flex-row gap-16 items-start">
+                
+                <!-- IMAGE : Inspiré de fiche_accessoire.php -->
+                <div class="lg:w-1/2 w-full bg-slate-50 border border-slate-100">
+                    <div class="relative group overflow-hidden aspect-[8/6]">
+                        <img 
+                            src={acc.image} 
+                            alt={acc.nom} 
+                            class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                        />
+                    </div>
+                </div>
+
+                <!-- CONTENT : Inspiré de fiche_accessoire.php -->
+                <div class="lg:w-1/2 w-full space-y-10">
+                    <div class="space-y-4">
+                        <h1 class="font-serif text-4xl md:text-5xl font-bold text-slate-900 leading-tight uppercase">
+                            {acc.nom}
+                        </h1>
+                        
+                        <div class="flex items-center gap-4">
+                             <span class={`w-2 h-2 rounded-full ${acc.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                             <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                {acc.stock > 0 ? (lang === 'fr' ? 'En Stock' : 'In Stock') : (lang === 'fr' ? 'Épuisé' : 'Out of Stock')}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="prose prose-slate">
+                        <h3 class="text-[0.7rem] font-black uppercase tracking-[3px] text-slate-900 mb-4 border-b pb-2">
+                            {lang === 'fr' ? 'Description du produit' : 'Product Description'}
+                        </h3>
+                        <p class="text-gray-500 font-light leading-relaxed whitespace-pre-line">
+                            {acc.desc}
+                        </p>
+                    </div>
+
+                    <div class="pt-6">
+                        <a 
+                            href={`https://wa.me/237674500040?text=${encodeURIComponent(lang === 'fr' ? "Bonjour STRADIP, je souhaiterais commander l'article :" : "Hello STRADIP, I would like to order the item:")} ${acc.nom}`}
+                            target="_blank"
+                            class="flex items-center justify-center w-full bg-slate-900 text-white py-5 px-8 text-[0.7rem] font-black uppercase tracking-[3px] hover:bg-stradip-cyan transition-all duration-300 group"
+                        >
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.417-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.305 1.652zm6.599-3.835l.354.21c1.425.848 3.067 1.297 4.75 1.298 5.301 0 9.613-4.313 9.615-9.613.002-2.568-1.002-4.983-2.826-6.809-1.825-1.826-4.242-2.83-6.808-2.831-5.304 0-9.615 4.313-9.618 9.614-.002 1.849.528 3.653 1.535 5.239l.233.366-1.008 3.685 3.769-.989z" />
+                            </svg>
+                            {lang === 'fr' ? 'Commander via WhatsApp' : 'Order via WhatsApp'}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUGGESTIONS : Inspiré de fiche_accessoire.php -->
+            {suggestions.length > 0 && (
+                <section class="mt-32 pt-16 border-t border-slate-100">
+                    <h2 class="font-serif text-2xl font-bold text-slate-900 mb-12 uppercase">
+                        {lang === 'fr' ? 'Vous pourriez aussi avoir besoin' : 'You might also need'}
+                    </h2>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                        {suggestions.map((s) => (
+                            <a href={translatePath(`/accessoires/${s.id}`)} class="group block bg-slate-50">
+                                <div class="aspect-square overflow-hidden bg-slate-50 mb-4 border border-slate-100 p-1">
+                                    <img 
+                                        src={s.image} 
+                                        class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                                        alt={s.nom}
+                                    />
+                                </div>
+                                <h4 class="text-xs font-bold uppercase tracking-widest text-slate-800 p-2 pt-0">
+                                    {s.nom}
+                                </h4>
+                            </a>
+                        ))}
+                    </div>
+                </section>
+            )}
+        </div>
+    </main>
+
+    <Footer />
+</Layout>
+
+<style>
+    .font-serif { font-family: 'Playfair Display', serif; }
+</style>

@@ -1,0 +1,67 @@
+---
+// src/components/FilterBar.astro
+---
+
+<div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-12 shadow-sm">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+        
+        <div class="space-y-2">
+            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Style</label>
+            <select class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-stradip-cyan transition-colors appearance-none cursor-pointer">
+                <option>Tous les styles</option>
+                <option>Carreaux Standard</option>
+                <option>Décorations & Motifs</option>
+            </select>
+        </div>
+
+        <div class="space-y-2">
+            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Application</label>
+            <select class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-stradip-cyan transition-colors appearance-none cursor-pointer">
+                <option>Toutes les poses</option>
+                <option>Sol (Floor)</option>
+                <option>Mur (Wall)</option>
+            </select>
+        </div>
+
+        <div class="space-y-2">
+            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Espaces</label>
+            <select class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-stradip-cyan transition-colors appearance-none cursor-pointer">
+                <option>Toutes les pièces</option>
+                <option>Living room</option>
+                <option>Bedroom</option>
+                <option>Bathroom</option>
+                <option>Dining room</option>
+                <option>Kitchen</option>
+                <option>Outdoor</option>
+            </select>
+        </div>
+
+        <div class="space-y-2">
+            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Matières</label>
+            <select class="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-stradip-cyan transition-colors appearance-none cursor-pointer">
+                <option>Toutes les matières</option>
+                <option>Effet Bois</option>
+                <option>Grès Cérame</option>
+                <option>Marbre</option>
+                <option>Métal & Industriel</option>
+                <option>Pierre Naturelle</option>
+            </select>
+        </div>
+
+        <div class="flex items-center justify-center">
+            <button class="flex items-center gap-2 text-red-400 hover:text-red-600 text-[10px] font-bold uppercase tracking-widest transition-colors py-3">
+                <span>✕</span> Réinitialiser
+            </button>
+        </div>
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-slate-200 flex items-center gap-6">
+        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Couleurs :</span>
+        <div class="flex gap-3">
+            <button class="w-6 h-6 rounded-full bg-white border border-slate-200 hover:scale-110 transition-transform shadow-sm" title="White"></button>
+            <button class="w-6 h-6 rounded-full bg-gray-400 hover:scale-110 transition-transform shadow-sm" title="Grey"></button>
+            <button class="w-6 h-6 rounded-full bg-black hover:scale-110 transition-transform shadow-sm" title="Black"></button>
+            <button class="w-6 h-6 rounded-full bg-[#F5F5DC] hover:scale-110 transition-transform shadow-sm" title="Beige"></button>
+        </div>
+    </div>
+</div>

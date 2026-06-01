@@ -1,0 +1,198 @@
+---
+// src/pages/admin/produits/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Récupération des produits depuis l'API FastAPI
+const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/`);
+const data = await response.json();
+const rawProduits = data.items || data;
+
+const produits = Array.isArray(rawProduits) ? rawProduits.map((p: any) => ({
+    id: p.id,
+    nom: p.nom,
+    reference: p.reference,
+    dimension: p.dimension,
+    nom_matiere: p.category ? p.category.nom_matiere : 'Standard',
+    image_url: p.image_url.startsWith('http') ? p.image_url : `${import.meta.env.PUBLIC_API_URL}${p.image_url}`
+})) : [];
+---
+
+<AdminLayout title="Gérer le Catalogue" currentPage="/admin/produits">
+    <div class="flex justify-between items-end mb-12">
+        <div>
+            <h2 class="text-3xl font-bold text-slate-900 uppercase tracking-tighter">Gestion du Catalogue</h2>
+            <p class="text-slate-500 text-sm mt-1">Modifiez ou supprimez vos références de carreaux.</p>
+        </div>
+
+        <div class="flex items-center space-x-6">
+            <span class="text-[0.6rem] font-black uppercase tracking-widest text-slate-400">
+                {produits.length} Références
+            </span>
+            <a href="/admin/produits/add" class="bg-stradip-blue text-white px-6 py-3 rounded-xl text-[0.6rem] font-black uppercase tracking-widest hover:bg-stradip-cyan transition-colors shadow-lg">
+                + Ajouter un produit
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-100 shadow-xl overflow-hidden rounded-3xl">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50/50 text-slate-400 border-b border-slate-100">
+                    <th class="p-6 text-[0.6rem] font-black uppercase tracking-widest">Aperçu</th>
+                    <th class="p-6 text-[0.6rem] font-black uppercase tracking-widest">Produit</th>
+                    <th class="p-6 text-[0.6rem] font-black uppercase tracking-widest">Référence</th>
+                    <th class="p-6 text-[0.6rem] font-black uppercase tracking-widest">Matière</th>
+                    <th class="p-6 text-[0.6rem] font-black uppercase tracking-widest text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {produits.map((p) => (
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="p-6">
+                            <div class="w-16 h-16 bg-slate-100 border border-slate-200 overflow-hidden rounded-xl">
+                                <img src={p.image_url} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={p.nom} />
+                            </div>
+                        </td>
+                        <td class="p-6">
+                            <p class="text-sm font-bold text-slate-800 uppercase tracking-tighter">{p.nom}</p>
+                            <p class="text-[0.65rem] text-slate-400 uppercase tracking-widest mt-1">{p.dimension} cm</p>
+                        </td>
+                        <td class="p-6 font-mono text-xs font-semibold text-stradip-cyan">
+                            {p.reference}
+                        </td>
+                        <td class="p-6">
+                            <span class="text-[0.55rem] font-black uppercase tracking-widest bg-slate-100 px-3 py-1.5 text-slate-600 rounded-full border border-slate-200">
+                                {p.nom_matiere}
+                            </span>
+                        </td>
+                        <td class="p-6 text-right">
+                            <div class="flex justify-end space-x-3">
+                                <a href={`/admin/produits/modifier/${p.id}`} class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-stradip-cyan/10 hover:text-stradip-cyan transition-colors border border-slate-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </a>
+                                <button 
+                                    class="delete-btn w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors border border-slate-200"
+                                    data-id={p.id}
+                                    data-nom={p.nom}
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MODAL DE CONFIRMATION DE SUPPRESSION -->
+    <div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden p-4">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="modalOverlay"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-md p-10 overflow-hidden transform transition-all scale-95 opacity-0 duration-300" id="modalContent">
+            <!-- Icon -->
+            <div class="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-8 mx-auto">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+
+            <div class="text-center space-y-4">
+                <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tighter italic">Confirmer la <span class="text-red-500">Suppression</span></h3>
+                <p class="text-slate-500 text-sm leading-relaxed">
+                    Voulez-vous vraiment retirer <span id="deleteProductName" class="font-bold text-slate-900"></span> du catalogue ? Cette action est irréversible.
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3 mt-10">
+                <button id="confirmDelete" class="w-full bg-red-500 text-white py-4 rounded-2xl text-[0.7rem] font-black uppercase tracking-[3px] hover:bg-red-600 transition-all shadow-xl shadow-red-500/20">
+                    Supprimer définitivement
+                </button>
+                <button id="cancelDelete" class="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl text-[0.7rem] font-black uppercase tracking-[3px] hover:bg-slate-100 transition-all">
+                    Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+</AdminLayout>
+
+<script>
+    const deleteBtns = document.querySelectorAll('.delete-btn');
+    const deleteModal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('modalContent');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const cancelBtn = document.getElementById('cancelDelete');
+    const confirmBtn = document.getElementById('confirmDelete');
+    const productNameSpan = document.getElementById('deleteProductName');
+
+    let currentDeleteId = null;
+    let currentRow = null;
+
+    const openModal = (id, nom, row) => {
+        currentDeleteId = id;
+        currentRow = row;
+        if (productNameSpan) productNameSpan.textContent = nom;
+        
+        deleteModal?.classList.remove('hidden');
+        setTimeout(() => {
+            modalContent?.classList.remove('scale-95', 'opacity-0');
+            modalContent?.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    };
+
+    const closeModal = () => {
+        modalContent?.classList.remove('scale-100', 'opacity-100');
+        modalContent?.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            deleteModal?.classList.add('hidden');
+        }, 300);
+    };
+
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const nom = btn.getAttribute('data-nom');
+            const row = btn.closest('tr');
+            openModal(id, nom, row);
+        });
+    });
+
+    [cancelBtn, modalOverlay].forEach(el => el?.addEventListener('click', closeModal));
+
+    confirmBtn?.addEventListener('click', async () => {
+        if (!currentDeleteId) return;
+
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Suppression...';
+
+        try {
+            const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/${currentDeleteId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                currentRow?.remove();
+                closeModal();
+                
+                if (document.querySelectorAll('tbody tr').length === 0) {
+                    window.location.reload();
+                }
+            } else {
+                alert("Erreur lors de la suppression.");
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Supprimer définitivement';
+            }
+        } catch (error) {
+            console.error("Erreur:", error);
+            alert("Impossible de contacter le serveur.");
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Supprimer définitivement';
+        }
+    });
+</script>
