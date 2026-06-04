@@ -45,7 +45,7 @@ const displayImageUrl = product.image_url.startsWith('http')
             <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter mt-6 italic">Modifier <span class="text-stradip-blue">{product.nom}</span></h2>
         </header>
 
-        <form id="editForm" class="bg-white p-10 md:p-16 rounded-[3rem] shadow-sm border border-slate-100 space-y-12">
+        <form id="editForm" method="POST" enctype="multipart/form-data" class="bg-white p-10 md:p-16 rounded-[3rem] shadow-sm border border-slate-100 space-y-12">
             <!-- Messages d'état -->
             <div id="statusMessage" class="hidden p-4 rounded-xl text-sm font-bold"></div>
 
@@ -145,14 +145,35 @@ const displayImageUrl = product.image_url.startsWith('http')
                             <img id="preview" src={displayImageUrl} class="w-full h-full object-cover" />
                         </div>
                     </div>
-                    <div class="md:col-span-2 space-y-8">
+            <div class="md:col-span-2 space-y-8">
                         <div>
                             <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Remplacer la photo (Optionnel)</label>
-                            <div class="p-8 border-4 border-dashed border-slate-50 bg-slate-50/50 rounded-2xl text-center cursor-pointer group" id="drop-zone">
+                            <div 
+                                class="p-8 border-4 border-dashed border-slate-50 bg-slate-50/50 rounded-2xl text-center cursor-pointer group transition-all hover:border-stradip-cyan/30 hover:bg-slate-100/50" 
+                                id="drop-zone"
+                                onclick="document.getElementById('file-input').click()"
+                            >
                                 <span class="text-2xl mb-2 block group-hover:scale-110 transition-transform">🔄</span>
                                 <p id="fileName" class="text-[9px] font-black uppercase tracking-[2px] text-slate-400">Modifier l'image</p>
-                                <input type="file" name="image" class="hidden" id="file-input" accept="image/*">
                             </div>
+                            <input 
+                                type="file" 
+                                name="image" 
+                                class="hidden" 
+                                id="file-input" 
+                                accept="image/*"
+                                onchange="
+                                    const file = this.files[0];
+                                    if (file) {
+                                        document.getElementById('fileName').textContent = 'Fichier sélectionné : ' + file.name;
+                                        const reader = new FileReader();
+                                        reader.onload = (e) => {
+                                            document.getElementById('preview').src = e.target.result;
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                "
+                            >
                         </div>
                         <div>
                             <label class="block text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-3">Description marketing</label>
@@ -172,7 +193,7 @@ const displayImageUrl = product.image_url.startsWith('http')
     </div>
 </AdminLayout>
 
-<script define:vars={{ productId: id, currentImageUrl: product.image_url }}>
+<script define:vars={{ productId: id, currentImageUrl: product.image_url, apiUrl: import.meta.env.PUBLIC_API_URL }}>
     const form = document.getElementById('editForm');
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
@@ -240,7 +261,7 @@ const displayImageUrl = product.image_url.startsWith('http')
                 const formDataImage = new FormData();
                 formDataImage.append('file', fileInput.files[0]);
 
-                const uploadRes = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/upload/`, {
+                const uploadRes = await fetch(`${apiUrl}/api/upload/`, {
                     method: 'POST',
                     body: formDataImage
                 });
@@ -266,7 +287,7 @@ const displayImageUrl = product.image_url.startsWith('http')
             };
 
             // 3. Envoi PUT
-            const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/products/${productId}`, {
+            const res = await fetch(`${apiUrl}/api/products/${productId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(productData)
