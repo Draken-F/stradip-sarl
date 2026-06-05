@@ -1,8 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
-from ..database import get_session
-from ..models import Activity
+from database import get_session
+from models import Activity
 
 router = APIRouter()
 

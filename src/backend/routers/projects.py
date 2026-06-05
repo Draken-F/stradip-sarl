@@ -1,8 +1,8 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
-from ..database import get_session
-from ..models import Realisation, RealisationSection, RealisationSectionPhoto, Product
+from database import get_session
+from models import Realisation, RealisationSection, RealisationSectionPhoto, Product
 from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 
@@ -72,7 +72,7 @@ def read_realisation(realisation_id: int, db: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Realisation not found")
     return realisation
 
-from .activities import log_activity
+from routers.activities import log_activity
 
 @router.post("/", response_model=RealisationRead, status_code=status.HTTP_201_CREATED)
 def create_realisation(realisation: Realisation, db: Session = Depends(get_session)):

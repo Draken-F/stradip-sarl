@@ -3,10 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, select
 import os
-from .database import init_db, engine
-from .models import User
-from .core.security import get_password_hash
-from .routers import auth, products, projects, accessories, uploads, activities
+from database import init_db, engine
+from models import User
+from core.security import get_password_hash
+from routers import auth, products, projects, accessories, uploads, activities
 
 app = FastAPI(title="Stradip Backend API")
 
@@ -20,9 +20,9 @@ app.add_middleware(
 )
 
 # Montage du dossier uploads pour servir les images
-if not os.path.exists("src/backend/uploads"):
-    os.makedirs("src/backend/uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="src/backend/uploads"), name="uploads")
+if not os.path.exists("uploads"):
+    os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 def create_admin_user():
     with Session(engine) as session:

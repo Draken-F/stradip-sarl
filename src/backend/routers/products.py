@@ -1,8 +1,8 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
-from ..database import get_session
-from ..models import Product, Category
+from database import get_session
+from models import Product, Category
 
 router = APIRouter()
 
@@ -70,7 +70,7 @@ def read_product(product_id: int, db: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
-from .activities import log_activity
+from routers.activities import log_activity
 
 @router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
 def create_product(product: Product, db: Session = Depends(get_session)):
