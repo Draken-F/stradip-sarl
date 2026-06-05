@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 .vercel
 
+# Exclude old boutique
+boutique_carreaux/
+
+
