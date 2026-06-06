@@ -12,7 +12,7 @@ const translatePath = useTranslatedPath(lang);
 
 
 
-<nav id="navbar" class="fixed w-full z-50 transition-all duration-500 py-6 bg-white/50 shadow-sm">
+<nav id="navbar" class="fixed top-0 left-0 w-full z-[100] transition-all duration-500 py-6 bg-white/50 shadow-sm">
   <div class="container mx-auto px-6 md:px-12 lg:px-24 flex justify-between items-center">
     
     <!-- LOGO -->
@@ -69,32 +69,32 @@ const translatePath = useTranslatedPath(lang);
       </button>
     </div>
   </div>
-
-  <!-- MOBILE MENU OVERLAY -->
-  <div id="mobile-menu" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center translate-x-full transition-transform duration-500 lg:hidden">
-    <div class="flex flex-col items-center gap-8">
-      <a href={translatePath('/')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.home')}</a>
-      <a href={translatePath('/collections')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.collections')}</a>
-      <a href={translatePath('/accessoires')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.accessoires')}</a>
-      <a href={translatePath('/realisations')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.realisations')}</a>
-      <a href={translatePath('/#contact')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.contact')}</a>
-      
-      <div class="mt-4">
-        <LanguagePicker />
-      </div>
-
-      <a href={translatePath('/devis')} class="mt-8 bg-stradip-blue text-white px-10 py-4 rounded-full text-xs font-black uppercase tracking-[3px] shadow-2xl">
-        {t('nav.cta')}
-      </a>
-    </div>
-
-    <!-- Infos contact en bas -->
-    <div class="absolute bottom-12 text-center space-y-2">
-      <p class="text-[10px] font-black uppercase tracking-[3px] text-slate-400">Contact Douala</p>
-      <p class="text-sm font-bold text-stradip-blue">+237 674 500 040</p>
-    </div>
-  </div>
 </nav>
+
+<!-- MOBILE MENU OVERLAY (Moved outside <nav> for better z-index and scroll handling) -->
+<div id="mobile-menu" class="fixed inset-0 bg-white z-[90] flex flex-col items-center justify-center translate-x-full transition-transform duration-500 lg:hidden">
+  <div class="flex flex-col items-center gap-8">
+    <a href={translatePath('/')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.home')}</a>
+    <a href={translatePath('/collections')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.collections')}</a>
+    <a href={translatePath('/accessoires')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.accessoires')}</a>
+    <a href={translatePath('/realisations')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.realisations')}</a>
+    <a href={translatePath('/#contact')} class="mobile-nav-link text-2xl font-bold uppercase tracking-[5px] text-slate-900 hover:text-stradip-cyan transition-colors">{t('nav.contact')}</a>
+    
+    <div class="mt-4">
+      <LanguagePicker />
+    </div>
+
+    <a href={translatePath('/devis')} class="mt-8 bg-stradip-blue text-white px-10 py-4 rounded-full text-xs font-black uppercase tracking-[3px] shadow-2xl">
+      {t('nav.cta')}
+    </a>
+  </div>
+
+  <!-- Infos contact en bas -->
+  <div class="absolute bottom-12 text-center space-y-2">
+    <p class="text-[10px] font-black uppercase tracking-[3px] text-slate-400">Contact Douala</p>
+    <p class="text-sm font-bold text-stradip-blue">+237 674 500 040</p>
+  </div>
+</div>
 
 <script>
   const nav = document.getElementById('navbar');
